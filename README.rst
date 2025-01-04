@@ -33,7 +33,7 @@ Introduction
 This module provides an ``aiohttp`` resolver that supports mDNS, which uses the ``zeroconf`` library
 to resolve mDNS queries.
 
-For full documentation please read https://aiohttp_asyncmdnsresolver.readthedocs.io.
+For full documentation please read https://aiohttp-asyncmdnsresolver.readthedocs.io.
 
 Installation
 ------------
@@ -67,7 +67,7 @@ Quick start
 API documentation
 -----------------
 
-The documentation is located at https://aiohttp_asyncmdnsresolver.readthedocs.io.
+The documentation is located at https://aiohttp-asyncmdnsresolver.readthedocs.io.
 
 Source code
 -----------
