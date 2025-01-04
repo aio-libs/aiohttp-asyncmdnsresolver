@@ -1,0 +1,44 @@
+---
+
+codecov:
+  notify:
+    after_n_builds: 5  # The number of test matrix+lint jobs uploading coverage
+    wait_for_ci: false
+
+  require_ci_to_pass: false
+
+  token: >-  # notsecret  # repo-scoped, upload-only, stability in fork PRs
+    1377c679-8317-456e-a685-644c1de1e083
+
+comment:
+  require_changes: true
+
+coverage:
+  range: 99.34..100
+  status:
+    patch:
+      default:
+        target: 100%
+        flags:
+        - pytest
+    project:
+      default:
+        target: 100%
+      lib:
+        flags:
+        - pytest
+        paths:
+        - aiohttp_asyncmdnsresolver/
+        target: 100%
+      tests:
+        flags:
+        - pytest
+        paths:
+        - tests/
+        target: 98.2%  # 100%
+      typing:
+        flags:
+        - MyPy
+        target: 100%  # 100%
+
+...

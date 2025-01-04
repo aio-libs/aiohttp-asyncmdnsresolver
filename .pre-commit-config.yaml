@@ -1,0 +1,138 @@
+---
+
+ci:
+  autoupdate_schedule: quarterly
+  skip:
+  - actionlint-docker
+
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: 'v5.0.0'
+  hooks:
+  - id: check-merge-conflict
+- repo: https://github.com/asottile/yesqa
+  rev: v1.5.0
+  hooks:
+  - id: yesqa
+    additional_dependencies:
+    - wemake-python-styleguide
+
+- repo: https://github.com/python-jsonschema/check-jsonschema.git
+  rev: 0.29.3
+  hooks:
+  - id: check-github-workflows
+    files: ^\.github/workflows/[^/]+$
+    types:
+    - yaml
+  - id: check-jsonschema
+    alias: check-github-workflows-timeout
+    name: Check GitHub Workflows set timeout-minutes
+    args:
+    - --builtin-schema
+    - github-workflows-require-timeout
+    files: ^\.github/workflows/[^/]+$
+    types:
+    - yaml
+  - id: check-readthedocs
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: 'v5.0.0'
+  hooks:
+  - id: end-of-file-fixer
+  - id: requirements-txt-fixer
+  - id: trailing-whitespace
+  - id: file-contents-sorter
+    files: |
+      docs/spelling_wordlist.txt|
+      .gitignore|
+      .gitattributes
+  - id: check-case-conflict
+  - id: check-json
+  - id: check-xml
+  - id: check-executables-have-shebangs
+  - id: check-toml
+  - id: check-xml
+  - id: check-yaml
+  - id: debug-statements
+  - id: check-added-large-files
+  - id: check-symlinks
+  - id: debug-statements
+  - id: detect-aws-credentials
+    args: ['--allow-missing-credentials']
+  - id: detect-private-key
+    exclude: ^examples/
+- repo: https://github.com/asottile/pyupgrade
+  rev: 'v3.17.0'
+  hooks:
+  - id: pyupgrade
+    args: ['--py39-plus']
+
+- repo: https://github.com/codespell-project/codespell.git
+  rev: v2.3.0
+  hooks:
+  - id: codespell
+
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.8.2
+  hooks:
+  - id: ruff
+    args: [--fix, --exit-non-zero-on-fix]
+  - id: ruff-format
+
+- repo: https://github.com/Lucas-C/pre-commit-hooks-markup
+  rev: v1.0.1
+  hooks:
+  - id: rst-linter
+    exclude: ^CHANGES\.rst$
+    files: >-
+      ^[^/]+[.]rst$
+
+- repo: https://github.com/pre-commit/mirrors-mypy.git
+  rev: v1.11.2
+  hooks:
+  - id: mypy
+    alias: mypy-py313
+    name: MyPy, for Python 3.13
+    additional_dependencies:
+    - lxml  # dep of `--txt-report`, `--cobertura-xml-report` & `--html-report`
+    - pytest
+    - pytest-asyncio
+    - aiohttp
+    - zeroconf
+    args:
+    - --python-version=3.13
+    - --txt-report=.tox/.tmp/.mypy/python-3.13
+    - --cobertura-xml-report=.tox/.tmp/.mypy/python-3.13
+    - --html-report=.tox/.tmp/.mypy/python-3.13
+    pass_filenames: false
+  - id: mypy
+    alias: mypy-py39
+    name: MyPy, for Python 3.9
+    additional_dependencies:
+    - lxml  # dep of `--txt-report`, `--cobertura-xml-report` & `--html-report`
+    - pytest
+    - pytest-asyncio
+    - aiohttp
+    - zeroconf
+    args:
+    - --python-version=3.9
+    - --txt-report=.tox/.tmp/.mypy/python-3.9
+    - --cobertura-xml-report=.tox/.tmp/.mypy/python-3.9
+    - --html-report=.tox/.tmp/.mypy/python-3.9
+    pass_filenames: false
+
+- repo: https://github.com/rhysd/actionlint.git
+  rev: v1.7.3
+  hooks:
+  - id: actionlint-docker
+    args:
+    - -ignore
+    - >-  # https://github.com/rhysd/actionlint/issues/384
+      ^type of expression at "float number value" must be number
+      but found type string$
+    - -ignore
+    - >-  # https://github.com/rhysd/actionlint/pull/380#issuecomment-2325391372
+      ^input "attestations" is not defined in action
+      "pypa/gh-action-pypi-publish@release/v1". available inputs are ".*"$
+
+...
