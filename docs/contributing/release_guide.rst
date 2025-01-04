@@ -102,4 +102,4 @@ The release stage
 
 
 .. _GitHub Actions CI/CD workflow:
-   https://github.com/aio-libs/aiohttp_asyncmdnsresolver/actions/workflows/ci-cd.yml
+   https://github.com/aio-libs/aiohttp-asyncmdnsresolver/actions/workflows/ci-cd.yml

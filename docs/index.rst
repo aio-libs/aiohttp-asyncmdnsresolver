@@ -30,7 +30,7 @@ Source code
 The project is hosted on GitHub_
 
 Please file an issue on the `bug tracker
-<https://github.com/aio-libs/aiohttp_asyncmdnsresolver/issues>`_ if you have found a bug
+<https://github.com/aio-libs/aiohttp-asyncmdnsresolver/issues>`_ if you have found a bug
 or have some suggestion in order to improve the library.
 
 Authors and License
@@ -71,4 +71,4 @@ Indices and tables
 * :ref:`search`
 
 
-.. _GitHub: https://github.com/aio-libs/aiohttp_asyncmdnsresolver
+.. _GitHub: https://github.com/aio-libs/aiohttp-asyncmdnsresolver
