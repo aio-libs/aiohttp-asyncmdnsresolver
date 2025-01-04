@@ -1,8 +1,6 @@
 aiohttp-asyncmdnsresolver
 =========================
 
-The module provides a fast implementation of cached properties for Python 3.9+.
-
 .. image:: https://github.com/aio-libs/aiohttp_asyncmdnsresolver/actions/workflows/ci-cd.yml/badge.svg
   :target: https://github.com/aio-libs/aiohttp_asyncmdnsresolver/actions?query=workflow%3ACI
   :align: right
