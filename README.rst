@@ -5,7 +5,7 @@ aiohttp-asyncmdnsresolver
   :target: https://github.com/aio-libs/aiohttp-asyncmdnsresolver/actions?query=workflow%3ACI
   :align: right
 
-.. image:: https://codecov.io/gh/aio-libs/aiohttp-asyncmdnsresolver/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/aio-libs/aiohttp-asyncmdnsresolver/branch/main/graph/badge.svg
   :target: https://codecov.io/gh/aio-libs/aiohttp-asyncmdnsresolver
 
 .. image:: https://badge.fury.io/py/aiohttp_asyncmdnsresolver.svg
