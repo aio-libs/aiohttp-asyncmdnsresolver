@@ -1,12 +1,12 @@
 aiohttp-asyncmdnsresolver
 =========================
 
-.. image:: https://github.com/aio-libs/aiohttp_asyncmdnsresolver/actions/workflows/ci-cd.yml/badge.svg
-  :target: https://github.com/aio-libs/aiohttp_asyncmdnsresolver/actions?query=workflow%3ACI
+.. image:: https://github.com/aio-libs/aiohttp-asyncmdnsresolver/actions/workflows/ci-cd.yml/badge.svg
+  :target: https://github.com/aio-libs/aiohttp-asyncmdnsresolver/actions?query=workflow%3ACI
   :align: right
 
-.. image:: https://codecov.io/gh/aio-libs/aiohttp_asyncmdnsresolver/branch/master/graph/badge.svg
-  :target: https://codecov.io/gh/aio-libs/aiohttp_asyncmdnsresolver
+.. image:: https://codecov.io/gh/aio-libs/aiohttp-asyncmdnsresolver/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/aio-libs/aiohttp-asyncmdnsresolver
 
 .. image:: https://badge.fury.io/py/aiohttp_asyncmdnsresolver.svg
     :target: https://badge.fury.io/py/aiohttp_asyncmdnsresolver
@@ -75,7 +75,7 @@ Source code
 The project is hosted on GitHub_
 
 Please file an issue on the `bug tracker
-<https://github.com/aio-libs/aiohttp_asyncmdnsresolver/issues>`_ if you have found a bug
+<https://github.com/aio-libs/aiohttp-asyncmdnsresolver/issues>`_ if you have found a bug
 or have some suggestion in order to improve the library.
 
 
@@ -85,4 +85,4 @@ Authors and License
 It's *Apache 2* licensed and freely available.
 
 
-.. _GitHub: https://github.com/aio-libs/aiohttp_asyncmdnsresolver
+.. _GitHub: https://github.com/aio-libs/aiohttp-asyncmdnsresolver
