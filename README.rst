@@ -8,16 +8,16 @@ aiohttp-asyncmdnsresolver
 .. image:: https://codecov.io/gh/aio-libs/aiohttp-asyncmdnsresolver/branch/main/graph/badge.svg
   :target: https://codecov.io/gh/aio-libs/aiohttp-asyncmdnsresolver
 
-.. image:: https://badge.fury.io/py/aiohttp_asyncmdnsresolver.svg
-    :target: https://badge.fury.io/py/aiohttp_asyncmdnsresolver
+.. image:: https://badge.fury.io/py/aiohttp-asyncmdnsresolver.svg
+    :target: https://badge.fury.io/py/aiohttp-asyncmdnsresolver
 
 
-.. image:: https://readthedocs.org/projects/aiohttp_asyncmdnsresolver/badge/?version=latest
-    :target: https://aiohttp_asyncmdnsresolver.readthedocs.io
+.. image:: https://readthedocs.org/projects/aiohttp-asyncmdnsresolver/badge/?version=latest
+    :target: https://aiohttp-asyncmdnsresolver.readthedocs.io
 
 
-.. image:: https://img.shields.io/pypi/pyversions/aiohttp_asyncmdnsresolver.svg
-    :target: https://pypi.python.org/pypi/aiohttp_asyncmdnsresolver
+.. image:: https://img.shields.io/pypi/pyversions/aiohttp-asyncmdnsresolver.svg
+    :target: https://pypi.org/p/aiohttp-asyncmdnsresolver
 
 .. image:: https://img.shields.io/matrix/aio-libs:matrix.org?label=Discuss%20on%20Matrix%20at%20%23aio-libs%3Amatrix.org&logo=matrix&server_fqdn=matrix.org&style=flat
    :target: https://matrix.to/#/%23aio-libs:matrix.org
@@ -40,7 +40,7 @@ Installation
 
 ::
 
-   $ pip install aiohttp_asyncmdnsresolver
+   $ pip install aiohttp-asyncmdnsresolver
 
 
 Quick start
