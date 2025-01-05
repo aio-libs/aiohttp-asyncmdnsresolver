@@ -125,6 +125,8 @@ jobs:
         version_file: src/aiohttp_asyncmdnsresolver/__init__.py
         github_token: ${{ secrets.GITHUB_TOKEN }}
         dist_dir: dist
+        head_line: >-
+          v{version}\n=+\n\n\*\({date}\)\*\n
         fix_issue_regex: "`#(\\d+) <https://github.com/aio-libs/aiohttp-asyncmdnsresolver/issues/\\1>`"
         fix_issue_repl: "(#\\1)"
     - name: >-
