@@ -13,3 +13,14 @@ Changelog
     WARNING: Don't drop the next directive!
 
 .. towncrier release notes start
+
+v0.0.1
+======
+
+*(2025-01-05)*
+
+
+Initial release
+
+
+----
