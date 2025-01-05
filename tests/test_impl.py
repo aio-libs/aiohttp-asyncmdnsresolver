@@ -17,7 +17,7 @@ from aiohttp_asyncmdnsresolver._impl import (
 @pytest_asyncio.fixture
 async def resolver() -> AsyncGenerator[AsyncMDNSResolver]:
     """Return a resolver."""
-    resolver = AsyncMDNSResolver(timeout=0.1)
+    resolver = AsyncMDNSResolver(mdns_timeout=0.1)
     yield resolver
     await resolver.close()
 
@@ -26,7 +26,7 @@ async def resolver() -> AsyncGenerator[AsyncMDNSResolver]:
 async def custom_resolver() -> AsyncGenerator[AsyncMDNSResolver]:
     """Return a resolver."""
     aiozc = AsyncZeroconf()
-    resolver = AsyncMDNSResolver(timeout=0.1, async_zeroconf=aiozc)
+    resolver = AsyncMDNSResolver(mdns_timeout=0.1, async_zeroconf=aiozc)
     yield resolver
     await resolver.close()
     await aiozc.async_close()
@@ -198,7 +198,7 @@ async def test_resolve_mdns_passed_in_asynczeroconf(
 async def test_create_destroy_resolver() -> None:
     """Test the resolver can be created and destroyed."""
     aiozc = AsyncZeroconf()
-    resolver = AsyncMDNSResolver(timeout=0.1, async_zeroconf=aiozc)
+    resolver = AsyncMDNSResolver(mdns_timeout=0.1, async_zeroconf=aiozc)
     await resolver.close()
     await aiozc.async_close()
     assert resolver._aiozc is None
@@ -208,7 +208,7 @@ async def test_create_destroy_resolver() -> None:
 @pytest.mark.asyncio
 async def test_create_destroy_resolver_no_aiozc() -> None:
     """Test the resolver can be created and destroyed."""
-    resolver = AsyncMDNSResolver(timeout=0.1)
+    resolver = AsyncMDNSResolver(mdns_timeout=0.1)
     await resolver.close()
     assert resolver._aiozc is None
     assert resolver._aiozc_owner is True

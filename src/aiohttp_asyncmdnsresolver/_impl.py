@@ -77,12 +77,12 @@ class AsyncMDNSResolver(AsyncResolver):
         self,
         *args: Any,
         async_zeroconf: AsyncZeroconf | None = None,
-        timeout: float | None = None,
+        mdns_timeout: float | None = DEFAULT_TIMEOUT,
         **kwargs: Any,
     ) -> None:
         """Initialize the resolver."""
         super().__init__(*args, **kwargs)
-        self._timeout = timeout or DEFAULT_TIMEOUT
+        self._mdns_timeout = mdns_timeout
         self._aiozc_owner = async_zeroconf is None
         self._aiozc = async_zeroconf or AsyncZeroconf()
 
@@ -106,8 +106,10 @@ class AsyncMDNSResolver(AsyncResolver):
         if (
             info.load_from_cache(self._aiozc.zeroconf)
             or (
-                self._timeout
-                and await info.async_request(self._aiozc.zeroconf, self._timeout * 1000)
+                self._mdns_timeout
+                and await info.async_request(
+                    self._aiozc.zeroconf, self._mdns_timeout * 1000
+                )
             )
         ) and (addresses := info.ip_addresses_by_version(ip_version)):
             return [_to_resolve_result(host, port, address) for address in addresses]
