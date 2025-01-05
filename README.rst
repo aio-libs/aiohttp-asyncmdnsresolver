@@ -38,7 +38,7 @@ For full documentation please read https://aiohttp-asyncmdnsresolver.readthedocs
 Installation
 ------------
 
-::
+.. code-block:: console
 
    $ pip install aiohttp-asyncmdnsresolver
 
@@ -46,7 +46,7 @@ Installation
 Quick start
 -----------
 
-::
+.. code-block:: python
 
    import asyncio
    import aiohttp
