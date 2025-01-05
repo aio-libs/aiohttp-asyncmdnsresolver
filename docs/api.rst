@@ -13,7 +13,7 @@ The only public *aiohttp_asyncmdnsresolver.api* class is :class:`AsyncMDNSResolv
    >>> from aiohttp_asyncmdnsresolver.api import AsyncMDNSResolver
 
 
-.. class:: AsyncMDNSResolver(*args*, *, async_zeroconf, timeout, **kwargs)
+.. class:: AsyncMDNSResolver(*args, *, async_zeroconf=None, mdns_timeout=5.0, **kwargs)
 
    This class functions the same as ``aiohttp.resolver.AsyncResolver``,
    but with the added ability to resolve mDNS queries.
@@ -22,8 +22,9 @@ The only public *aiohttp_asyncmdnsresolver.api* class is :class:`AsyncMDNSResolv
         passed, it will be used to resolve mDNS queries. If not, a new
         instance will be created.
 
-    :param float timeout: The timeout for the mDNS query in seconds. If not provided
-        the default timeout is 5 seconds.
+    :param float mdns_timeout: The timeout for the mDNS query in seconds. If not provided
+        the default timeout is 5 seconds. If the mdns_timeout is set to 0, the
+        query will only use the cache and will not perform a new query.
 
    Example::
 
