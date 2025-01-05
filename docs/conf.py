@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# aiohttp_asyncmdnsresolver documentation build configuration file, created by
+# aiohttp-asyncmdnsresolver documentation build configuration file, created by
 # sphinx-quickstart on Mon Aug 29 19:55:36 2016.
 #
 # This file is execfile()d with the current directory set to its
@@ -105,7 +105,7 @@ master_doc = "index"
 
 github_url = "https://github.com"
 github_repo_org = "aio-libs"
-github_repo_name = "aiohttp_asyncmdnsresolver"
+github_repo_name = "aiohttp-asyncmdnsresolver"
 github_repo_slug = f"{github_repo_org}/{github_repo_name}"
 github_repo_url = f"{github_url}/{github_repo_slug}"
 github_sponsors_url = f"{github_url}/sponsors"
@@ -199,9 +199,9 @@ extlinks = {
 html_theme = "alabaster"
 
 html_theme_options = {
-    "description": "aiohttp_asyncmdnsresolver",
+    "description": "aiohttp-asyncmdnsresolver",
     "github_user": "aio-libs",
-    "github_repo": "aiohttp_asyncmdnsresolver",
+    "github_repo": "aiohttp-asyncmdnsresolver",
     "github_button": True,
     "github_type": "star",
     "github_banner": True,
@@ -227,7 +227,7 @@ html_theme_options = {
 # The name for this set of Sphinx documents.
 # "<project> v<release> documentation" by default.
 #
-# html_title = 'aiohttp_asyncmdnsresolver v0.1.0'
+# html_title = 'aiohttp-asyncmdnsresolver v0.1.0'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #
@@ -335,7 +335,7 @@ html_sidebars = {
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "aiohttp_asyncmdnsresolverdoc"
+htmlhelp_basename = "aiohttp-asyncmdnsresolverdoc"
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -360,8 +360,8 @@ latex_elements = {
 latex_documents = [
     (
         master_doc,
-        "aiohttp_asyncmdnsresolver.tex",
-        "aiohttp_asyncmdnsresolver Documentation",
+        "aiohttp-asyncmdnsresolver.tex",
+        "aiohttp-asyncmdnsresolver Documentation",
         "manual",
     ),
 ]
@@ -406,8 +406,8 @@ latex_documents = [
 man_pages = [
     (
         master_doc,
-        "aiohttp_asyncmdnsresolver",
-        "aiohttp_asyncmdnsresolver Documentation",
+        "aiohttp-asyncmdnsresolver",
+        "aiohttp-asyncmdnsresolver Documentation",
         [author],
         1,
     )
@@ -426,10 +426,10 @@ man_pages = [
 texinfo_documents = [
     (
         master_doc,
-        "aiohttp_asyncmdnsresolver",
-        "aiohttp_asyncmdnsresolver Documentation",
+        "aiohttp-asyncmdnsresolver",
+        "aiohttp-asyncmdnsresolver Documentation",
         author,
-        "aiohttp_asyncmdnsresolver",
+        "aiohttp-asyncmdnsresolver",
         "One line description of project.",
         "Miscellaneous",
     ),
