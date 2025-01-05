@@ -122,7 +122,7 @@ jobs:
       with:
         changes_file: CHANGES.rst
         name: aiohttp-asyncmdnsresolver
-        version_file: aiohttp_asyncmdnsresolver/src/__init__.py
+        version_file: src/aiohttp_asyncmdnsresolver/__init__.py
         github_token: ${{ secrets.GITHUB_TOKEN }}
         dist_dir: dist
         fix_issue_regex: "`#(\\d+) <https://github.com/aio-libs/aiohttp-asyncmdnsresolver/issues/\\1>`"
