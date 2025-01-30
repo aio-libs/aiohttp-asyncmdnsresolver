@@ -14,6 +14,24 @@ Changelog
 
 .. towncrier release notes start
 
+v0.0.2
+======
+
+*(2025-01-30)*
+
+
+Miscellaneous internal changes
+------------------------------
+
+- Migrated to using zeroconf's built-in resolver classes -- by :user:`bdraco`.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`19`.
+
+
+----
+
+
 v0.0.1
 ======
 
