@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import socket
 from typing import Any
-from zeroconf.asyncio import (
-    AsyncZeroconf,
-)
+from zeroconf.asyncio import AsyncZeroconf
 from zeroconf import (
     AddressResolver,
     AddressResolverIPv4,
