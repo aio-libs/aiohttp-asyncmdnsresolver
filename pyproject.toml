@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aiohttp-asyncmdnsresolver"
-dependencies = ["aiodns>=3.2.0", "aiohttp>=3.10.0", "zeroconf>=0.132.0"]
+dependencies = ["aiodns>=3.2.0", "aiohttp>=3.10.0", "zeroconf>=0.142.0"]
 description = "An async resolver for aiohttp that supports MDNS"
 dynamic = ["version"]
 license = {file = "LICENSE"}

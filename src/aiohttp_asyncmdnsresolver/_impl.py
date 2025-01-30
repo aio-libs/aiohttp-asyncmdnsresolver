@@ -4,45 +4,25 @@ from __future__ import annotations
 
 import socket
 from typing import Any
-from zeroconf import IPVersion
-from zeroconf.asyncio import AsyncZeroconf, AsyncServiceInfo
+from zeroconf.asyncio import AsyncZeroconf
+from zeroconf import (
+    AddressResolver,
+    AddressResolverIPv4,
+    AddressResolverIPv6,
+    IPVersion,
+)
 from aiohttp.resolver import AsyncResolver, ResolveResult
 from ipaddress import IPv4Address, IPv6Address
 
-
-class IPv6orIPv4HostResolver(AsyncServiceInfo):
-    """Resolve a host name to an IP address."""
-
-    @property
-    def _is_complete(self) -> bool:
-        """The ServiceInfo has all expected properties."""
-        return bool(self._ipv4_addresses) or bool(self._ipv6_addresses)
-
-
-class IPv6HostResolver(AsyncServiceInfo):
-    """Resolve a host name to an IP address."""
-
-    @property
-    def _is_complete(self) -> bool:
-        """The ServiceInfo has all expected properties."""
-        return bool(self._ipv6_addresses)
-
-
-class IPv4HostResolver(AsyncServiceInfo):
-    """Resolve a host name to an IP address."""
-
-    @property
-    def _is_complete(self) -> bool:
-        """The ServiceInfo has all expected properties."""
-        return bool(self._ipv4_addresses)
-
-
 DEFAULT_TIMEOUT = 5.0
 
-_FAMILY_TO_RESOLVER_CLASS = {
-    socket.AF_INET: IPv4HostResolver,
-    socket.AF_INET6: IPv6HostResolver,
-    socket.AF_UNSPEC: IPv6orIPv4HostResolver,
+_FAMILY_TO_RESOLVER_CLASS: dict[
+    socket.AddressFamily,
+    type[AddressResolver] | type[AddressResolverIPv4] | type[AddressResolverIPv6],
+] = {
+    socket.AF_INET: AddressResolverIPv4,
+    socket.AF_INET6: AddressResolverIPv6,
+    socket.AF_UNSPEC: AddressResolver,
 }
 _FAMILY_TO_IP_VERSION = {
     socket.AF_INET: IPVersion.V4Only,
@@ -98,11 +78,11 @@ class AsyncMDNSResolver(AsyncResolver):
         self, host: str, port: int, family: socket.AddressFamily
     ) -> list[ResolveResult]:
         """Resolve a host name to an IP address using mDNS."""
-        resolver_class: type[AsyncServiceInfo] = _FAMILY_TO_RESOLVER_CLASS[family]
+        resolver_class = _FAMILY_TO_RESOLVER_CLASS[family]
         ip_version: IPVersion = _FAMILY_TO_IP_VERSION[family]
         if host[-1] != ".":
             host += "."
-        info = resolver_class(".local.", host, server=host)
+        info = resolver_class(host)
         if (
             info.load_from_cache(self._aiozc.zeroconf)
             or (

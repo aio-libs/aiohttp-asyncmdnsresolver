@@ -7,11 +7,39 @@ from collections.abc import AsyncGenerator
 from unittest.mock import patch
 from ipaddress import IPv6Address, IPv4Address
 import socket
+from collections.abc import Generator
 from aiohttp_asyncmdnsresolver._impl import (
-    IPv4HostResolver,
-    IPv6HostResolver,
-    IPv6orIPv4HostResolver,
+    _FAMILY_TO_RESOLVER_CLASS,
+    AddressResolver,
+    AddressResolverIPv4,
+    AddressResolverIPv6,
 )
+
+
+class IPv6orIPv4HostResolver(AddressResolver):
+    """Patchable class for testing."""
+
+
+class IPv4HostResolver(AddressResolverIPv4):
+    """Patchable class for testing."""
+
+
+class IPv6HostResolver(AddressResolverIPv6):
+    """Patchable class for testing."""
+
+
+@pytest.fixture(autouse=True)
+def make_resolvers_patchable() -> Generator[None, None, None]:
+    """Patch the resolvers."""
+    with patch.dict(
+        _FAMILY_TO_RESOLVER_CLASS,
+        {
+            socket.AF_INET: IPv4HostResolver,
+            socket.AF_INET6: IPv6HostResolver,
+            socket.AF_UNSPEC: IPv6orIPv4HostResolver,
+        },
+    ):
+        yield
 
 
 @pytest_asyncio.fixture
