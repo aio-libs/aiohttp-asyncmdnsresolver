@@ -1,5 +1,7 @@
 import asyncio
+
 import aiohttp
+
 from aiohttp_asyncmdnsresolver.api import AsyncMDNSResolver
 
 

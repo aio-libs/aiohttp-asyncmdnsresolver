@@ -34,3 +34,8 @@ packages = ["aiohttp_asyncmdnsresolver"]
 
 [tool.setuptools.dynamic]
 version = {attr = "aiohttp_asyncmdnsresolver.__version__"}
+
+[tool.ruff]
+select = [
+    "I",  # isort formatting.
+]

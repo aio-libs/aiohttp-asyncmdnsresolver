@@ -1,6 +1,6 @@
 """Test we do not break the public API."""
 
-from aiohttp_asyncmdnsresolver import api, _impl
+from aiohttp_asyncmdnsresolver import _impl, api
 
 
 def test_api() -> None:

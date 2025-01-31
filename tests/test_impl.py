@@ -1,19 +1,20 @@
-from aiohttp_asyncmdnsresolver.api import AsyncMDNSResolver
-from aiohttp.resolver import ResolveResult
+import socket
+from collections.abc import AsyncGenerator, Generator
+from ipaddress import IPv4Address, IPv6Address
+from unittest.mock import patch
+
 import pytest
 import pytest_asyncio
+from aiohttp.resolver import ResolveResult
 from zeroconf.asyncio import AsyncZeroconf
-from collections.abc import AsyncGenerator
-from unittest.mock import patch
-from ipaddress import IPv6Address, IPv4Address
-import socket
-from collections.abc import Generator
+
 from aiohttp_asyncmdnsresolver._impl import (
     _FAMILY_TO_RESOLVER_CLASS,
     AddressResolver,
     AddressResolverIPv4,
     AddressResolverIPv6,
 )
+from aiohttp_asyncmdnsresolver.api import AsyncMDNSResolver
 
 
 class IPv6orIPv4HostResolver(AddressResolver):
