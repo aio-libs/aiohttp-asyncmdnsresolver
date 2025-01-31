@@ -14,6 +14,24 @@ Changelog
 
 .. towncrier release notes start
 
+v0.0.3
+======
+
+*(2025-01-31)*
+
+
+Bug fixes
+---------
+
+- Fixed imports not being properly sorted -- by :user:`bdraco`.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`21`.
+
+
+----
+
+
 v0.0.2
 ======
 
