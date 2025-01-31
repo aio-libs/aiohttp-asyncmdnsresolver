@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import socket
+from ipaddress import IPv4Address, IPv6Address
 from typing import Any
-from zeroconf.asyncio import AsyncZeroconf
+
+from aiohttp.resolver import AsyncResolver, ResolveResult
 from zeroconf import (
     AddressResolver,
     AddressResolverIPv4,
     AddressResolverIPv6,
     IPVersion,
 )
-from aiohttp.resolver import AsyncResolver, ResolveResult
-from ipaddress import IPv4Address, IPv6Address
+from zeroconf.asyncio import AsyncZeroconf
 
 DEFAULT_TIMEOUT = 5.0
 
