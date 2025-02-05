@@ -6,7 +6,8 @@ Reference
 
 .. module:: aiohttp_asyncmdnsresolver.api
 
-The only public *aiohttp_asyncmdnsresolver.api* class is :class:`AsyncMDNSResolver`:
+The only public *aiohttp_asyncmdnsresolver.api* classes are :class:`AsyncMDNSResolver`
+and :class:`AsyncDualMDNSResolver`:
 
 .. doctest::
 
@@ -35,3 +36,10 @@ The only public *aiohttp_asyncmdnsresolver.api* class is :class:`AsyncMDNSResolv
        async with aiohttp.ClientSession(connector=connector) as session:
            async with session.get("http://KNKSADE41945.local.") as response:
                print(response.status)
+
+
+.. class: AsyncDualMDNSResolver(*args, *, async_zeroconf=None, mdns_timeout=5.0, **kwargs)
+
+   This class functions the same as ``aiohttp.resolver.AsyncMDNSResolver`` and
+   takes the same arguments, but with the added ability to resolve mDNS queries
+   using both the mDNS and DNS protocols.
