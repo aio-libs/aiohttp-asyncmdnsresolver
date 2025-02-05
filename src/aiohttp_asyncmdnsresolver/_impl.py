@@ -157,7 +157,7 @@ class AsyncDualMDNSResolver(_AsyncMDNSResolverBase):
             else:
                 task.cancel()
                 try:
-                    task.exception()  # clear log traceback
+                    await task  # clear log traceback
                 except asyncio.CancelledError:
                     if (
                         sys.version_info >= (3, 11)
