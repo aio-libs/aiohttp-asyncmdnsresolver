@@ -40,6 +40,11 @@ and :class:`AsyncDualMDNSResolver`:
 
 .. class:: AsyncDualMDNSResolver(*args, *, async_zeroconf=None, mdns_timeout=5.0, **kwargs)
 
-   This class functions the same as ``aiohttp.resolver.AsyncMDNSResolver`` and
-   takes the same arguments, but with the added ability to resolve .local names
-   using both the mDNS and DNS protocols at the same time.
+   This resolver is a variant of :class:`AsyncMDNSResolver` that resolves ``.local``
+    names with both mDNS and regular DNS. It takes the same arguments as
+    :class:`AsyncMDNSResolver`, and is used in the same way.
+
+   - The first successful result from either resolver is returned.
+   - If both resolvers fail, an exception is raised.
+   - If both resolvers return results at the same time, the results are
+     combined and duplicates are removed.
