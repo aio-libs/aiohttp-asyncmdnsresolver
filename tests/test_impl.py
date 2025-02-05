@@ -336,6 +336,43 @@ async def test_first_result_wins_async_dual_mdns_resolver(
 
 
 @pytest.mark.asyncio
+async def test_exception_before_result_async_dual_mdns_resolver(
+    dual_resolver: AsyncMDNSResolver,
+) -> None:
+    """Test AsyncDualMDNSResolver resolves using mDNS and DNS.
+
+    Test that an exception is returned before the other
+    resolver returns a result.
+    """
+
+    async def _take_a_while_to_resolve_and_fail(*args: Any, **kwargs: Any) -> NoReturn:
+        await asyncio.sleep(0)
+        raise OSError(None, "NXDOMAIN")
+
+    async def _take_a_while_to_resolve(
+        *args: Any, **kwargs: Any
+    ) -> list[ResolveResult]:
+        await asyncio.sleep(0.2)
+        return [ResolveResult(hostname="localhost.local.", host="127.0.0.1", port=0)]  # type: ignore[typeddict-item]
+
+    with (
+        patch(
+            "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
+            _take_a_while_to_resolve,
+        ),
+        patch.object(
+            IPv4HostResolver, "async_request", _take_a_while_to_resolve_and_fail
+        ),
+    ):
+        results = await dual_resolver.resolve("localhost.local.")
+    assert results is not None
+    assert len(results) == 1
+    result = results[0]
+    assert result["hostname"] == "localhost.local."
+    assert result["host"] == "127.0.0.1"
+
+
+@pytest.mark.asyncio
 async def test_different_results_async_dual_mdns_resolver(
     dual_resolver: AsyncMDNSResolver,
 ) -> None:
