@@ -1,5 +1,5 @@
 """Public API of the property caching library."""
 
-from ._impl import AsyncMDNSResolver
+from ._impl import AsyncDualMDNSResolver, AsyncMDNSResolver
 
-__all__ = ("AsyncMDNSResolver",)
+__all__ = ("AsyncMDNSResolver", "AsyncDualMDNSResolver")

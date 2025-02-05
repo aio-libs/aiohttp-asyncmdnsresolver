@@ -1,6 +1,8 @@
+import asyncio
 import socket
 from collections.abc import AsyncGenerator, Generator
 from ipaddress import IPv4Address, IPv6Address
+from typing import Any, NoReturn
 from unittest.mock import patch
 
 import pytest
@@ -14,7 +16,7 @@ from aiohttp_asyncmdnsresolver._impl import (
     AddressResolverIPv4,
     AddressResolverIPv6,
 )
-from aiohttp_asyncmdnsresolver.api import AsyncMDNSResolver
+from aiohttp_asyncmdnsresolver.api import AsyncDualMDNSResolver, AsyncMDNSResolver
 
 
 class IPv6orIPv4HostResolver(AddressResolver):
@@ -52,6 +54,14 @@ async def resolver() -> AsyncGenerator[AsyncMDNSResolver]:
 
 
 @pytest_asyncio.fixture
+async def dual_resolver() -> AsyncGenerator[AsyncDualMDNSResolver]:
+    """Return a dual resolver."""
+    dual_resolver = AsyncDualMDNSResolver(mdns_timeout=0.1)
+    yield dual_resolver
+    await dual_resolver.close()
+
+
+@pytest_asyncio.fixture
 async def custom_resolver() -> AsyncGenerator[AsyncMDNSResolver]:
     """Return a resolver."""
     aiozc = AsyncZeroconf()
@@ -62,13 +72,32 @@ async def custom_resolver() -> AsyncGenerator[AsyncMDNSResolver]:
 
 
 @pytest.mark.asyncio
-async def test_resolve_localhost(resolver: AsyncMDNSResolver) -> None:
+async def test_resolve_localhost_with_async_mdns_resolver(
+    resolver: AsyncMDNSResolver,
+) -> None:
     """Test the resolve method delegates to AsyncResolver for non MDNS."""
     with patch(
         "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
         return_value=[ResolveResult(hostname="localhost", host="127.0.0.1")],  # type: ignore[typeddict-item]
     ):
         results = await resolver.resolve("localhost")
+    assert results is not None
+    assert len(results) == 1
+    result = results[0]
+    assert result["hostname"] == "localhost"
+    assert result["host"] == "127.0.0.1"
+
+
+@pytest.mark.asyncio
+async def test_resolve_localhost_with_async_dual_mdns_resolver(
+    dual_resolver: AsyncMDNSResolver,
+) -> None:
+    """Test the resolve method delegates to AsyncDualMDNSResolver for non MDNS."""
+    with patch(
+        "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
+        return_value=[ResolveResult(hostname="localhost", host="127.0.0.1")],  # type: ignore[typeddict-item]
+    ):
+        results = await dual_resolver.resolve("localhost")
     assert results is not None
     assert len(results) == 1
     result = results[0]
@@ -241,3 +270,181 @@ async def test_create_destroy_resolver_no_aiozc() -> None:
     await resolver.close()
     assert resolver._aiozc is None
     assert resolver._aiozc_owner is True
+
+
+@pytest.mark.asyncio
+async def test_same_results_async_dual_mdns_resolver(
+    dual_resolver: AsyncMDNSResolver,
+) -> None:
+    """Test AsyncDualMDNSResolver resolves using mDNS and DNS.
+
+    Test when both resolvers return the same result.
+    """
+    with (
+        patch(
+            "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
+            return_value=[
+                ResolveResult(hostname="localhost.local.", host="127.0.0.1", port=0)  # type: ignore[typeddict-item]
+            ],
+        ),
+        patch.object(IPv4HostResolver, "async_request", return_value=True),
+        patch.object(
+            IPv4HostResolver,
+            "ip_addresses_by_version",
+            return_value=[IPv4Address("127.0.0.1")],
+        ),
+    ):
+        results = await dual_resolver.resolve("localhost.local.")
+    assert results is not None
+    assert len(results) == 1
+    result = results[0]
+    assert result["hostname"] == "localhost.local."
+    assert result["host"] == "127.0.0.1"
+
+
+@pytest.mark.asyncio
+async def test_first_result_wins_async_dual_mdns_resolver(
+    dual_resolver: AsyncMDNSResolver,
+) -> None:
+    """Test AsyncDualMDNSResolver resolves using mDNS and DNS.
+
+    Test the first result wins when one resolver takes longer
+    """
+
+    async def _take_a_while_to_resolve(*args: Any, **kwargs: Any) -> NoReturn:
+        await asyncio.sleep(0.1)
+        raise RuntimeError("Should not be called")
+
+    with (
+        patch(
+            "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
+            _take_a_while_to_resolve,
+        ),
+        patch.object(IPv4HostResolver, "async_request", return_value=True),
+        patch.object(
+            IPv4HostResolver,
+            "ip_addresses_by_version",
+            return_value=[IPv4Address("127.0.0.2")],
+        ),
+    ):
+        results = await dual_resolver.resolve("localhost.local.")
+    assert results is not None
+    assert len(results) == 1
+    result = results[0]
+    assert result["hostname"] == "localhost.local."
+    assert result["host"] == "127.0.0.2"
+
+
+@pytest.mark.asyncio
+async def test_different_results_async_dual_mdns_resolver(
+    dual_resolver: AsyncMDNSResolver,
+) -> None:
+    """Test AsyncDualMDNSResolver resolves using mDNS and DNS.
+
+    Test when both resolvers return different results
+    """
+    with (
+        patch(
+            "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
+            return_value=[
+                ResolveResult(hostname="localhost.local.", host="127.0.0.1", port=0)  # type: ignore[typeddict-item]
+            ],
+        ),
+        patch.object(IPv4HostResolver, "async_request", return_value=True),
+        patch.object(
+            IPv4HostResolver,
+            "ip_addresses_by_version",
+            return_value=[IPv4Address("127.0.0.2")],
+        ),
+    ):
+        results = await dual_resolver.resolve("localhost.local.")
+    assert results is not None
+    assert len(results) == 2
+    result = results[0]
+    assert result["hostname"] == "localhost.local."
+    assert result["host"] == "127.0.0.2"
+    result = results[1]
+    assert result["hostname"] == "localhost.local."
+    assert result["host"] == "127.0.0.1"
+
+
+@pytest.mark.asyncio
+async def test_failed_mdns_async_dual_mdns_resolver(
+    dual_resolver: AsyncMDNSResolver,
+) -> None:
+    """Test AsyncDualMDNSResolver resolves using mDNS and DNS.
+
+    Test when mDNS fails, but DNS succeeds.
+    """
+    with (
+        patch(
+            "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
+            return_value=[
+                ResolveResult(hostname="localhost.local.", host="127.0.0.1", port=0)  # type: ignore[typeddict-item]
+            ],
+        ),
+        patch.object(IPv4HostResolver, "async_request", return_value=True),
+        patch.object(
+            IPv4HostResolver,
+            "ip_addresses_by_version",
+            return_value=[],
+        ),
+    ):
+        results = await dual_resolver.resolve("localhost.local.")
+    assert results is not None
+    assert len(results) == 1
+    result = results[0]
+    assert result["hostname"] == "localhost.local."
+    assert result["host"] == "127.0.0.1"
+
+
+@pytest.mark.asyncio
+async def test_failed_dns_async_dual_mdns_resolver(
+    dual_resolver: AsyncMDNSResolver,
+) -> None:
+    """Test AsyncDualMDNSResolver resolves using mDNS and DNS.
+
+    Test when DNS fails, but mDNS succeeds.
+    """
+    with (
+        patch(
+            "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
+            side_effect=OSError(None, "DNS lookup failed"),
+        ),
+        patch.object(IPv4HostResolver, "async_request", return_value=True),
+        patch.object(
+            IPv4HostResolver,
+            "ip_addresses_by_version",
+            return_value=[IPv4Address("127.0.0.2")],
+        ),
+    ):
+        results = await dual_resolver.resolve("localhost.local.")
+    assert results is not None
+    assert len(results) == 1
+    result = results[0]
+    assert result["hostname"] == "localhost.local."
+    assert result["host"] == "127.0.0.2"
+
+
+@pytest.mark.asyncio
+async def test_all_failed_async_dual_mdns_resolver(
+    dual_resolver: AsyncMDNSResolver,
+) -> None:
+    """Test AsyncDualMDNSResolver resolves using mDNS and DNS.
+
+    Test when DNS fails, and mDNS fails.
+    """
+    with (
+        patch(
+            "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
+            side_effect=OSError(None, "DNS lookup failed"),
+        ),
+        patch.object(IPv4HostResolver, "async_request", return_value=True),
+        patch.object(
+            IPv4HostResolver,
+            "ip_addresses_by_version",
+            return_value=[],
+        ),
+        pytest.raises(OSError, match="MDNS lookup failed, DNS lookup failed"),
+    ):
+        await dual_resolver.resolve("localhost.local.")
