@@ -41,5 +41,5 @@ and :class:`AsyncDualMDNSResolver`:
 .. class:: AsyncDualMDNSResolver(*args, *, async_zeroconf=None, mdns_timeout=5.0, **kwargs)
 
    This class functions the same as ``aiohttp.resolver.AsyncMDNSResolver`` and
-   takes the same arguments, but with the added ability to resolve mDNS queries
-   using both the mDNS and DNS protocols.
+   takes the same arguments, but with the added ability to resolve .local names
+   using both the mDNS and DNS protocols at the same time.
