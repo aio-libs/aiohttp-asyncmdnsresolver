@@ -115,7 +115,10 @@ class AsyncDualMDNSResolver(_AsyncMDNSResolverBase):
     """Use the `aiodns`/`zeroconf` packages to make asynchronous DNS lookups.
 
     This resolver is a variant of `AsyncMDNSResolver` that resolves .local
-    names with both mDNS and regular DNS and combines the results.
+    names with both mDNS and regular DNS. The first result from either
+    resolver is returned. If both resolvers fail, an exception is raised.
+    If both resolvers return results at the same time, the results are
+    combined and duplicates are removed.
     """
 
     async def resolve(
