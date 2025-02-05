@@ -138,9 +138,9 @@ class AsyncDualMDNSResolver(_AsyncMDNSResolverBase):
             mdns_task = loop.create_task(resolve_via_mdns)
             dns_task = loop.create_task(resolve_via_dns)
         await asyncio.wait((mdns_task, dns_task), return_when=asyncio.FIRST_COMPLETED)
-        if mdns_task.exception():
+        if mdns_task.done() and mdns_task.exception():
             await asyncio.wait((dns_task,), return_when=asyncio.ALL_COMPLETED)
-        elif dns_task.exception():
+        elif dns_task.done() and dns_task.exception():
             await asyncio.wait((mdns_task,), return_when=asyncio.ALL_COMPLETED)
         resolve_results: list[ResolveResult] = []
         exceptions: list[BaseException] = []
