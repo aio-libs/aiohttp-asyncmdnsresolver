@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import socket
 import sys
-from contextlib import suppress
 from ipaddress import IPv4Address, IPv6Address
 from typing import Any
 
