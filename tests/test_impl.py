@@ -448,3 +448,27 @@ async def test_all_failed_async_dual_mdns_resolver(
         pytest.raises(OSError, match="MDNS lookup failed, DNS lookup failed"),
     ):
         await dual_resolver.resolve("localhost.local.")
+
+
+@pytest.mark.asyncio
+async def test_no_cancel_swallow_dual_mdns_resolver(
+    dual_resolver: AsyncMDNSResolver,
+) -> None:
+    """Test AsyncDualMDNSResolver does not swallow cancellation errors."""
+
+    async def _take_a_while_to_resolve(*args: Any, **kwargs: Any) -> NoReturn:
+        await asyncio.sleep(0.5)
+        raise RuntimeError("Should not be called")
+
+    with (
+        patch(
+            "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
+            _take_a_while_to_resolve,
+        ),
+        patch.object(IPv4HostResolver, "async_request", _take_a_while_to_resolve),
+    ):
+        resolve_tasks = asyncio.create_task(dual_resolver.resolve("localhost.local."))
+        await asyncio.sleep(0.1)
+        resolve_tasks.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await resolve_tasks
