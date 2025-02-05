@@ -38,7 +38,7 @@ and :class:`AsyncDualMDNSResolver`:
                print(response.status)
 
 
-.. class: AsyncDualMDNSResolver(*args, *, async_zeroconf=None, mdns_timeout=5.0, **kwargs)
+.. class:: AsyncDualMDNSResolver(*args, *, async_zeroconf=None, mdns_timeout=5.0, **kwargs)
 
    This class functions the same as ``aiohttp.resolver.AsyncMDNSResolver`` and
    takes the same arguments, but with the added ability to resolve mDNS queries
