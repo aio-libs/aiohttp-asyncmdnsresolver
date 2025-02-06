@@ -150,6 +150,9 @@ class AsyncDualMDNSResolver(_AsyncMDNSResolverBase):
                 if exc := task.exception():
                     exceptions.append(exc)
                 else:
+                    # If we have multiple results, we need to remove duplicates
+                    # and combine the results. We put the mDNS results first
+                    # to prioritize them.
                     for result in task.result():
                         result_key = (
                             result["hostname"],
