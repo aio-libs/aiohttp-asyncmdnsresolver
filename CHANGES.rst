@@ -14,6 +14,24 @@ Changelog
 
 .. towncrier release notes start
 
+v0.1.0
+======
+
+*(2025-02-05)*
+
+
+Features
+--------
+
+- Created the :class:`aiohttp_asyncmdnsresolver.api.AsyncDualMDNSResolver` class to resolve ``.local`` names using both mDNS and DNS -- by :user:`bdraco`.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`23`.
+
+
+----
+
+
 v0.0.3
 ======
 
