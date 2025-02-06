@@ -15,9 +15,9 @@ Introduction
 Usage
 -----
 
-The API provides a single ``AsyncMDNSResolver`` class that can be
-used to resolve mDNS queries and fallback to ``AsyncResolver`` for
-non-MDNS hosts.
+The API provides the :class:`aiohttp_asyncmdnsresolver.api.AsyncMDNSResolver` and
+:class:`aiohttp_asyncmdnsresolver.api.AsyncDualMDNSResolver` classes that can be
+used to resolve mDNS queries and fallback to ``AsyncResolver`` for non-MDNS hosts.
 
 API documentation
 -----------------
