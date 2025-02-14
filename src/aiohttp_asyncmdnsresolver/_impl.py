@@ -6,7 +6,7 @@ import asyncio
 import socket
 import sys
 from ipaddress import IPv4Address, IPv6Address
-from typing import Any
+from typing import Any, Union
 
 from aiohttp.resolver import AsyncResolver, ResolveResult
 from zeroconf import (
@@ -18,6 +18,8 @@ from zeroconf import (
 from zeroconf.asyncio import AsyncZeroconf
 
 DEFAULT_TIMEOUT = 5.0
+
+ResolverType = Union[AddressResolver, AddressResolverIPv4, AddressResolverIPv6]
 
 _FAMILY_TO_RESOLVER_CLASS: dict[
     socket.AddressFamily,
@@ -69,26 +71,34 @@ class _AsyncMDNSResolverBase(AsyncResolver):
         self._aiozc_owner = async_zeroconf is None
         self._aiozc = async_zeroconf or AsyncZeroconf()
 
-    async def _resolve_mdns(
-        self, host: str, port: int, family: socket.AddressFamily
-    ) -> list[ResolveResult]:
-        """Resolve a host name to an IP address using mDNS."""
+    def _make_resolver(self, host: str, family: socket.AddressFamily) -> ResolverType:
+        """Create an mDNS resolver."""
         resolver_class = _FAMILY_TO_RESOLVER_CLASS[family]
-        ip_version: IPVersion = _FAMILY_TO_IP_VERSION[family]
         if host[-1] != ".":
             host += "."
-        info = resolver_class(host)
-        if (
-            info.load_from_cache(self._aiozc.zeroconf)
-            or (
-                self._mdns_timeout
-                and await info.async_request(
-                    self._aiozc.zeroconf, self._mdns_timeout * 1000
-                )
-            )
-        ) and (addresses := info.ip_addresses_by_version(ip_version)):
+        return resolver_class(host)
+
+    def _addresses_from_info_or_raise(
+        self, info: ResolverType, host: str, port: int, family: socket.AddressFamily
+    ) -> list[ResolveResult]:
+        """Get addresses from info or raise OSError."""
+        ip_version = _FAMILY_TO_IP_VERSION[family]
+        if addresses := info.ip_addresses_by_version(ip_version):
             return [_to_resolve_result(host, port, address) for address in addresses]
         raise OSError(None, "MDNS lookup failed")
+
+    async def _resolve_mdns_by_request(self, info: ResolverType) -> bool:
+        """Resolve a host name to an IP address using mDNS."""
+        if not self._mdns_timeout:
+            return False
+        return await info.async_request(self._aiozc.zeroconf, self._mdns_timeout * 1000)
+
+    async def _resolve_mdns(
+        self, info: ResolverType, host: str, port: int, family: socket.AddressFamily
+    ) -> list[ResolveResult]:
+        """Resolve a host name to an IP address using mDNS."""
+        await self._resolve_mdns_by_request(info)
+        return self._addresses_from_info_or_raise(info, host, port, family)
 
     async def close(self) -> None:
         """Close the resolver."""
@@ -107,7 +117,10 @@ class AsyncMDNSResolver(_AsyncMDNSResolverBase):
         """Resolve a host name to an IP address."""
         if not host.endswith(".local") and not host.endswith(".local."):
             return await super().resolve(host, port, family)
-        return await self._resolve_mdns(host, port, family)
+        info = self._make_resolver(host, family)
+        if info.load_from_cache(self._aiozc.zeroconf):
+            return self._addresses_from_info_or_raise(info, host, port, family)
+        return await self._resolve_mdns(info, host, port, family)
 
 
 class AsyncDualMDNSResolver(_AsyncMDNSResolverBase):
@@ -128,7 +141,10 @@ class AsyncDualMDNSResolver(_AsyncMDNSResolverBase):
         """Resolve a host name to an IP address."""
         if not host.endswith(".local") and not host.endswith(".local."):
             return await super().resolve(host, port, family)
-        resolve_via_mdns = self._resolve_mdns(host, port, family)
+        info = self._make_resolver(host, family)
+        if info.load_from_cache(self._aiozc.zeroconf):
+            return self._addresses_from_info_or_raise(info, host, port, family)
+        resolve_via_mdns = self._resolve_mdns(info, host, port, family)
         resolve_via_dns = super().resolve(host, port, family)
         loop = asyncio.get_running_loop()
         if sys.version_info >= (3, 12):
