@@ -6,7 +6,7 @@ import asyncio
 import socket
 import sys
 from ipaddress import IPv4Address, IPv6Address
-from typing import Any, Union
+from typing import TYPE_CHECKING, Any, Union
 
 from aiohttp.resolver import AsyncResolver, ResolveResult
 from zeroconf import (
@@ -79,12 +79,18 @@ class _AsyncMDNSResolverBase(AsyncResolver):
         return resolver_class(host)
 
     def _addresses_from_info_or_raise(
-        self, info: ResolverType, host: str, port: int, family: socket.AddressFamily
+        self, info: ResolverType, family: socket.AddressFamily
     ) -> list[ResolveResult]:
         """Get addresses from info or raise OSError."""
         ip_version = _FAMILY_TO_IP_VERSION[family]
         if addresses := info.ip_addresses_by_version(ip_version):
-            return [_to_resolve_result(host, port, address) for address in addresses]
+            if TYPE_CHECKING:
+                assert info.server is not None
+                assert info.port is not None
+            return [
+                _to_resolve_result(info.server, info.port, address)
+                for address in addresses
+            ]
         raise OSError(None, "MDNS lookup failed")
 
     async def _resolve_mdns_by_request(self, info: ResolverType) -> bool:
@@ -94,11 +100,11 @@ class _AsyncMDNSResolverBase(AsyncResolver):
         return await info.async_request(self._aiozc.zeroconf, self._mdns_timeout * 1000)
 
     async def _resolve_mdns(
-        self, info: ResolverType, host: str, port: int, family: socket.AddressFamily
+        self, info: ResolverType, family: socket.AddressFamily
     ) -> list[ResolveResult]:
         """Resolve a host name to an IP address using mDNS."""
         await self._resolve_mdns_by_request(info)
-        return self._addresses_from_info_or_raise(info, host, port, family)
+        return self._addresses_from_info_or_raise(info, family)
 
     async def close(self) -> None:
         """Close the resolver."""
@@ -119,8 +125,8 @@ class AsyncMDNSResolver(_AsyncMDNSResolverBase):
             return await super().resolve(host, port, family)
         info = self._make_resolver(host, family)
         if info.load_from_cache(self._aiozc.zeroconf):
-            return self._addresses_from_info_or_raise(info, host, port, family)
-        return await self._resolve_mdns(info, host, port, family)
+            return self._addresses_from_info_or_raise(info, family)
+        return await self._resolve_mdns(info, family)
 
 
 class AsyncDualMDNSResolver(_AsyncMDNSResolverBase):
@@ -143,8 +149,8 @@ class AsyncDualMDNSResolver(_AsyncMDNSResolverBase):
             return await super().resolve(host, port, family)
         info = self._make_resolver(host, family)
         if info.load_from_cache(self._aiozc.zeroconf):
-            return self._addresses_from_info_or_raise(info, host, port, family)
-        resolve_via_mdns = self._resolve_mdns(info, host, port, family)
+            return self._addresses_from_info_or_raise(info, family)
+        resolve_via_mdns = self._resolve_mdns(info, family)
         resolve_via_dns = super().resolve(host, port, family)
         loop = asyncio.get_running_loop()
         if sys.version_info >= (3, 12):
