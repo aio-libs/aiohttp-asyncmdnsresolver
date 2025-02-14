@@ -14,6 +14,24 @@ Changelog
 
 .. towncrier release notes start
 
+v0.1.1
+======
+
+*(2025-02-14)*
+
+
+Miscellaneous internal changes
+------------------------------
+
+- Improved MDNS resolver performance when the name is already in the cache -- by :user:`bdraco`.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`27`.
+
+
+----
+
+
 v0.1.0
 ======
 
