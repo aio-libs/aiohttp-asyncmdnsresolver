@@ -91,17 +91,12 @@ class _AsyncMDNSResolverBase(AsyncResolver):
             ]
         raise OSError(None, "MDNS lookup failed")
 
-    async def _resolve_mdns_by_request(self, info: ResolverType) -> bool:
-        """Resolve a host name to an IP address using mDNS."""
-        if not self._mdns_timeout:
-            return False
-        return await info.async_request(self._aiozc.zeroconf, self._mdns_timeout * 1000)
-
     async def _resolve_mdns(
         self, info: ResolverType, port: int, family: socket.AddressFamily
     ) -> list[ResolveResult]:
         """Resolve a host name to an IP address using mDNS."""
-        await self._resolve_mdns_by_request(info)
+        if self._mdns_timeout:
+            await info.async_request(self._aiozc.zeroconf, self._mdns_timeout * 1000)
         return self._addresses_from_info_or_raise(info, port, family)
 
     async def close(self) -> None:
