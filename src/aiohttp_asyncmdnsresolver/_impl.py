@@ -74,9 +74,7 @@ class _AsyncMDNSResolverBase(AsyncResolver):
     def _make_resolver(self, host: str, family: socket.AddressFamily) -> ResolverType:
         """Create an mDNS resolver."""
         resolver_class = _FAMILY_TO_RESOLVER_CLASS[family]
-        if host[-1] != ".":
-            host += "."
-        return resolver_class(host)
+        return resolver_class(f"{host}." if host[-1] != "." else host)
 
     def _addresses_from_info_or_raise(
         self, info: ResolverType, port: int, family: socket.AddressFamily
