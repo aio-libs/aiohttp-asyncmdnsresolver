@@ -411,6 +411,31 @@ async def test_exception_dns_before_result_async_dual_mdns_resolver(
 
 
 @pytest.mark.asyncio
+async def test_async_dual_mdns_resolver_from_cache(
+    dual_resolver: AsyncMDNSResolver,
+) -> None:
+    """Test AsyncDualMDNSResolver can resolve from cache."""
+    with (
+        patch(
+            "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
+            side_effect=OSError,
+        ),
+        patch.object(IPv4HostResolver, "load_from_cache", return_value=True),
+        patch.object(
+            IPv4HostResolver,
+            "ip_addresses_by_version",
+            return_value=[IPv4Address("127.0.0.2")],
+        ),
+    ):
+        results = await dual_resolver.resolve("localhost.local.")
+    assert results is not None
+    assert len(results) == 1
+    result = results[0]
+    assert result["hostname"] == "localhost.local."
+    assert result["host"] == "127.0.0.2"
+
+
+@pytest.mark.asyncio
 async def test_different_results_async_dual_mdns_resolver(
     dual_resolver: AsyncMDNSResolver,
 ) -> None:
