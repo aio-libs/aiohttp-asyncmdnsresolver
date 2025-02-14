@@ -1,1 +1,0 @@
-Improved MDNS resolver performance when the name is already in the cache -- by :user:`bdraco`.
