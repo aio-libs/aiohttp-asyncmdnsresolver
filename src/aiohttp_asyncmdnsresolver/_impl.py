@@ -6,7 +6,7 @@ import asyncio
 import socket
 import sys
 from ipaddress import IPv4Address, IPv6Address
-from typing import Any
+from typing import TYPE_CHECKING, Any, Union
 
 from aiohttp.resolver import AsyncResolver, ResolveResult
 from zeroconf import (
@@ -18,6 +18,8 @@ from zeroconf import (
 from zeroconf.asyncio import AsyncZeroconf
 
 DEFAULT_TIMEOUT = 5.0
+
+ResolverType = Union[AddressResolver, AddressResolverIPv4, AddressResolverIPv6]
 
 _FAMILY_TO_RESOLVER_CLASS: dict[
     socket.AddressFamily,
@@ -69,26 +71,31 @@ class _AsyncMDNSResolverBase(AsyncResolver):
         self._aiozc_owner = async_zeroconf is None
         self._aiozc = async_zeroconf or AsyncZeroconf()
 
+    def _make_resolver(self, host: str, family: socket.AddressFamily) -> ResolverType:
+        """Create an mDNS resolver."""
+        resolver_class = _FAMILY_TO_RESOLVER_CLASS[family]
+        return resolver_class(host if host[-1] == "." else f"{host}.")
+
+    def _addresses_from_info_or_raise(
+        self, info: ResolverType, port: int, family: socket.AddressFamily
+    ) -> list[ResolveResult]:
+        """Get addresses from info or raise OSError."""
+        ip_version = _FAMILY_TO_IP_VERSION[family]
+        if addresses := info.ip_addresses_by_version(ip_version):
+            if TYPE_CHECKING:
+                assert info.server is not None
+            return [
+                _to_resolve_result(info.server, port, address) for address in addresses
+            ]
+        raise OSError(None, "MDNS lookup failed")
+
     async def _resolve_mdns(
-        self, host: str, port: int, family: socket.AddressFamily
+        self, info: ResolverType, port: int, family: socket.AddressFamily
     ) -> list[ResolveResult]:
         """Resolve a host name to an IP address using mDNS."""
-        resolver_class = _FAMILY_TO_RESOLVER_CLASS[family]
-        ip_version: IPVersion = _FAMILY_TO_IP_VERSION[family]
-        if host[-1] != ".":
-            host += "."
-        info = resolver_class(host)
-        if (
-            info.load_from_cache(self._aiozc.zeroconf)
-            or (
-                self._mdns_timeout
-                and await info.async_request(
-                    self._aiozc.zeroconf, self._mdns_timeout * 1000
-                )
-            )
-        ) and (addresses := info.ip_addresses_by_version(ip_version)):
-            return [_to_resolve_result(host, port, address) for address in addresses]
-        raise OSError(None, "MDNS lookup failed")
+        if self._mdns_timeout:
+            await info.async_request(self._aiozc.zeroconf, self._mdns_timeout * 1000)
+        return self._addresses_from_info_or_raise(info, port, family)
 
     async def close(self) -> None:
         """Close the resolver."""
@@ -107,7 +114,10 @@ class AsyncMDNSResolver(_AsyncMDNSResolverBase):
         """Resolve a host name to an IP address."""
         if not host.endswith(".local") and not host.endswith(".local."):
             return await super().resolve(host, port, family)
-        return await self._resolve_mdns(host, port, family)
+        info = self._make_resolver(host, family)
+        if info.load_from_cache(self._aiozc.zeroconf):
+            return self._addresses_from_info_or_raise(info, port, family)
+        return await self._resolve_mdns(info, port, family)
 
 
 class AsyncDualMDNSResolver(_AsyncMDNSResolverBase):
@@ -128,7 +138,10 @@ class AsyncDualMDNSResolver(_AsyncMDNSResolverBase):
         """Resolve a host name to an IP address."""
         if not host.endswith(".local") and not host.endswith(".local."):
             return await super().resolve(host, port, family)
-        resolve_via_mdns = self._resolve_mdns(host, port, family)
+        info = self._make_resolver(host, family)
+        if info.load_from_cache(self._aiozc.zeroconf):
+            return self._addresses_from_info_or_raise(info, port, family)
+        resolve_via_mdns = self._resolve_mdns(info, port, family)
         resolve_via_dns = super().resolve(host, port, family)
         loop = asyncio.get_running_loop()
         if sys.version_info >= (3, 12):
