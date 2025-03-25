@@ -1,0 +1,3 @@
+The packaging metadata switched to including an SPDX license identifier introduced in :pep:`639` -- by :user:`cdce8p`.
+
+As a side effect, the minimum required version of ``setuptools`` increased to v77.
