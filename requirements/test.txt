@@ -1,4 +1,4 @@
 covdefaults
-pytest==8.4.2
+pytest==9.0.3
 pytest-asyncio==1.2.0
 pytest-cov>=2.3.1
