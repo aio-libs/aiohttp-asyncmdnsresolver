@@ -9,7 +9,7 @@ description = "An async resolver for aiohttp that supports MDNS"
 dynamic = ["version"]
 license = "Apache-2.0"
 readme = "README.rst"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
