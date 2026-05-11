@@ -65,7 +65,7 @@ repos:
   rev: 'v3.17.0'
   hooks:
   - id: pyupgrade
-    args: ['--py39-plus']
+    args: ['--py310-plus']
 
 - repo: https://github.com/codespell-project/codespell.git
   rev: v2.3.0
@@ -106,8 +106,8 @@ repos:
     - --html-report=.tox/.tmp/.mypy/python-3.13
     pass_filenames: false
   - id: mypy
-    alias: mypy-py39
-    name: MyPy, for Python 3.9
+    alias: mypy-py310
+    name: MyPy, for Python 3.10
     additional_dependencies:
     - lxml  # dep of `--txt-report`, `--cobertura-xml-report` & `--html-report`
     - pytest
@@ -115,10 +115,10 @@ repos:
     - aiohttp
     - zeroconf
     args:
-    - --python-version=3.9
-    - --txt-report=.tox/.tmp/.mypy/python-3.9
-    - --cobertura-xml-report=.tox/.tmp/.mypy/python-3.9
-    - --html-report=.tox/.tmp/.mypy/python-3.9
+    - --python-version=3.10
+    - --txt-report=.tox/.tmp/.mypy/python-3.10
+    - --cobertura-xml-report=.tox/.tmp/.mypy/python-3.10
+    - --html-report=.tox/.tmp/.mypy/python-3.10
     pass_filenames: false
 
 - repo: https://github.com/rhysd/actionlint.git
