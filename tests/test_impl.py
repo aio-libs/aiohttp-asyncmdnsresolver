@@ -517,6 +517,39 @@ async def test_different_results_async_dual_mdns_resolver(
 
 
 @pytest.mark.asyncio
+async def test_duplicate_ip_differing_hostname_async_dual_mdns_resolver(
+    dual_resolver: AsyncMDNSResolver,
+) -> None:
+    """Test the dual resolver collapses the same address from mDNS and DNS.
+
+    The mDNS path reports the zeroconf ``info.server`` hostname (with a
+    trailing dot) while the DNS path echoes the caller's input host (no
+    trailing dot). Both describe the same endpoint, so the combined result
+    must not contain the address twice.
+    """
+    with (
+        patch(
+            "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
+            return_value=[
+                ResolveResult(hostname="localhost.local", host="127.0.0.1", port=0)  # type: ignore[typeddict-item]
+            ],
+        ),
+        patch.object(IPv4HostResolver, "async_request", return_value=True),
+        patch.object(
+            IPv4HostResolver,
+            "ip_addresses_by_version",
+            return_value=[IPv4Address("127.0.0.1")],
+        ),
+    ):
+        results = await dual_resolver.resolve("localhost.local")
+    assert results is not None
+    assert len(results) == 1
+    result = results[0]
+    assert result["hostname"] == "localhost.local."
+    assert result["host"] == "127.0.0.1"
+
+
+@pytest.mark.asyncio
 async def test_different_results_async_dual_mdns_resolver_zero_timeout(
     dual_resolver: AsyncMDNSResolver,
 ) -> None:
