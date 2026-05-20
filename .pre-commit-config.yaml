@@ -61,12 +61,6 @@ repos:
     args: ['--allow-missing-credentials']
   - id: detect-private-key
     exclude: ^examples/
-- repo: https://github.com/asottile/pyupgrade
-  rev: 'v3.17.0'
-  hooks:
-  - id: pyupgrade
-    args: ['--py310-plus']
-
 - repo: https://github.com/codespell-project/codespell.git
   rev: v2.3.0
   hooks:
