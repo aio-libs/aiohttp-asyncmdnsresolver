@@ -632,6 +632,31 @@ async def test_all_failed_async_dual_mdns_resolver(
 
 
 @pytest.mark.asyncio
+async def test_close_idempotent_owned_zeroconf() -> None:
+    """Closing a resolver that owns its AsyncZeroconf twice is a no-op."""
+    resolver = AsyncMDNSResolver(mdns_timeout=0.1)
+    assert resolver._aiozc_owner is True
+    await resolver.close()
+    assert resolver._aiozc is None
+    # A second close must not raise (e.g. AttributeError on None).
+    await resolver.close()
+    assert resolver._aiozc is None
+
+
+@pytest.mark.asyncio
+async def test_close_idempotent_custom_zeroconf() -> None:
+    """Closing a resolver with a passed-in AsyncZeroconf twice is a no-op."""
+    aiozc = AsyncZeroconf()
+    resolver = AsyncMDNSResolver(mdns_timeout=0.1, async_zeroconf=aiozc)
+    assert resolver._aiozc_owner is False
+    await resolver.close()
+    await resolver.close()
+    assert resolver._aiozc is None
+    # The caller still owns the passed-in instance and closes it themselves.
+    await aiozc.async_close()
+
+
+@pytest.mark.asyncio
 async def test_no_cancel_swallow_dual_mdns_resolver(
     dual_resolver: AsyncMDNSResolver,
 ) -> None:
