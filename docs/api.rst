@@ -25,8 +25,9 @@ and :class:`AsyncDualMDNSResolver`:
    :type async_zeroconf: ~zeroconf.asyncio.AsyncZeroconf
 
    :param float mdns_timeout: The timeout for the mDNS query in seconds. If not provided
-      the default timeout is 5 seconds. If the mdns_timeout is set to 0, the
-      query will only use the cache and will not perform a new query.
+      the default timeout is 5 seconds. If the mdns_timeout is set to ``0`` or
+      ``None``, the query will only use the cache and will not perform a new
+      query on the network.
 
    Example::
 
@@ -53,6 +54,10 @@ and :class:`AsyncDualMDNSResolver`:
       the ``zeroconf`` cache first and only send a query on the network when the
       cache misses. Raises ``OSError`` when the name cannot be resolved.
 
+      *family* selects the address family to resolve. The supported values are
+      ``socket.AF_INET`` (the default, IPv4 only), ``socket.AF_INET6`` (IPv6
+      only) and ``socket.AF_UNSPEC`` (both IPv4 and IPv6).
+
    .. method:: close()
       :async:
 
@@ -73,6 +78,20 @@ and :class:`AsyncDualMDNSResolver`:
    - If both resolvers fail, an exception is raised.
    - If both resolvers return results at the same time, the results are
      combined and duplicates are removed.
+
+   Example::
+
+       import aiohttp
+       from aiohttp_asyncmdnsresolver.api import AsyncDualMDNSResolver
+
+       resolver = AsyncDualMDNSResolver()
+       try:
+           connector = aiohttp.TCPConnector(resolver=resolver)
+           async with aiohttp.ClientSession(connector=connector) as session:
+               async with session.get("http://printer.local.") as response:
+                   print(response.status)
+       finally:
+           await resolver.close()
 
    .. method:: resolve(host, port=0, family=socket.AF_INET)
       :async:
