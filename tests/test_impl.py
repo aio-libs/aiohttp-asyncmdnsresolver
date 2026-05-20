@@ -207,6 +207,35 @@ async def test_resolve_mdns_name_mixed_case(resolver: AsyncMDNSResolver) -> None
 
 
 @pytest.mark.asyncio
+async def test_resolve_mdns_name_mixed_case_trailing_dot_async_dual_mdns_resolver(
+    dual_resolver: AsyncDualMDNSResolver,
+) -> None:
+    """Test the dual resolver matches .local case-insensitively (RFC 6762).
+
+    Uses a mixed-case host with a trailing dot to cover both the
+    AsyncDualMDNSResolver routing path and the ``.local.`` suffix branch.
+    """
+    with (
+        patch(
+            "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
+            return_value=[
+                ResolveResult(hostname="MyHost.Local.", host="127.0.0.1", port=0)  # type: ignore[typeddict-item]
+            ],
+        ),
+        patch.object(IPv4HostResolver, "async_request", return_value=True),
+        patch.object(
+            IPv4HostResolver,
+            "ip_addresses_by_version",
+            return_value=[IPv4Address("127.0.0.1")],
+        ),
+    ):
+        results = await dual_resolver.resolve("MyHost.Local.")
+    assert results is not None
+    assert len(results) == 1
+    assert results[0]["host"] == "127.0.0.1"
+
+
+@pytest.mark.asyncio
 async def test_resolve_mdns_name_af_inet(resolver: AsyncMDNSResolver) -> None:
     """Test the resolve method with socket.AF_INET family."""
     with (

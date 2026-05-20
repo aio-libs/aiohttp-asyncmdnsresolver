@@ -46,8 +46,7 @@ def _is_local_name(host: str) -> bool:
 
     RFC 6762 requires the .local suffix to be matched case-insensitively.
     """
-    lowered = host.lower()
-    return lowered.endswith(".local") or lowered.endswith(".local.")
+    return host.lower().endswith((".local", ".local."))
 
 
 def _to_resolve_result(
