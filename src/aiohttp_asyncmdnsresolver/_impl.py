@@ -41,6 +41,14 @@ _IP_VERSION_TO_FAMILY = {
 _NUMERIC_SOCKET_FLAGS = socket.AI_NUMERICHOST | socket.AI_NUMERICSERV
 
 
+def _is_local_name(host: str) -> bool:
+    """Return True if the host is in the .local mDNS domain.
+
+    RFC 6762 requires the .local suffix to be matched case-insensitively.
+    """
+    return host.lower().endswith((".local", ".local."))
+
+
 def _to_resolve_result(
     hostname: str, port: int, ipaddress: IPv4Address | IPv6Address
 ) -> ResolveResult:
@@ -112,7 +120,7 @@ class AsyncMDNSResolver(_AsyncMDNSResolverBase):
         self, host: str, port: int = 0, family: socket.AddressFamily = socket.AF_INET
     ) -> list[ResolveResult]:
         """Resolve a host name to an IP address."""
-        if not host.endswith(".local") and not host.endswith(".local."):
+        if not _is_local_name(host):
             return await super().resolve(host, port, family)
         info = self._make_resolver(host, family)
         if info.load_from_cache(self._aiozc.zeroconf):
@@ -136,7 +144,7 @@ class AsyncDualMDNSResolver(_AsyncMDNSResolverBase):
         self, host: str, port: int = 0, family: socket.AddressFamily = socket.AF_INET
     ) -> list[ResolveResult]:
         """Resolve a host name to an IP address."""
-        if not host.endswith(".local") and not host.endswith(".local."):
+        if not _is_local_name(host):
             return await super().resolve(host, port, family)
         info = self._make_resolver(host, family)
         if info.load_from_cache(self._aiozc.zeroconf):

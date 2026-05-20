@@ -1,0 +1,1 @@
+Matched the ``.local`` mDNS suffix case-insensitively so hostnames such as ``MyHost.LOCAL`` are routed through mDNS as required by :rfc:`6762` -- by :user:`aiolibsbot`.
