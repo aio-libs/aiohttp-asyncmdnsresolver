@@ -30,13 +30,17 @@ and :class:`AsyncDualMDNSResolver`:
 
    Example::
 
+       import aiohttp
        from aiohttp_asyncmdnsresolver.api import AsyncMDNSResolver
 
        resolver = AsyncMDNSResolver()
-       connector = aiohttp.TCPConnector(resolver=resolver)
-       async with aiohttp.ClientSession(connector=connector) as session:
-           async with session.get("http://KNKSADE41945.local.") as response:
-               print(response.status)
+       try:
+           connector = aiohttp.TCPConnector(resolver=resolver)
+           async with aiohttp.ClientSession(connector=connector) as session:
+               async with session.get("http://KNKSADE41945.local.") as response:
+                   print(response.status)
+       finally:
+           await resolver.close()
 
 
 .. class:: AsyncDualMDNSResolver(*args, *, async_zeroconf=None, mdns_timeout=5.0, **kwargs)
