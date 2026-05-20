@@ -1,0 +1,3 @@
+Added regression tests pinning the mDNS routing boundary so near-miss
+hostnames (e.g. ``host.local.example.com`` or ``foo.localdomain``) stay on the
+unicast DNS path instead of being misrouted to mDNS -- by :user:`aiolibsbot`.
