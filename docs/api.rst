@@ -43,6 +43,20 @@ and :class:`AsyncDualMDNSResolver`:
        finally:
            await resolver.close()
 
+   The resolver also supports the async context manager protocol, which closes
+   it automatically on exit -- ``aiohttp.TCPConnector`` does not take ownership
+   of a resolver passed to it, so this is the recommended way to avoid leaking
+   the underlying :class:`~zeroconf.asyncio.AsyncZeroconf` instance::
+
+       import aiohttp
+       from aiohttp_asyncmdnsresolver.api import AsyncMDNSResolver
+
+       async with AsyncMDNSResolver() as resolver:
+           connector = aiohttp.TCPConnector(resolver=resolver)
+           async with aiohttp.ClientSession(connector=connector) as session:
+               async with session.get("http://KNKSADE41945.local.") as response:
+                   print(response.status)
+
    .. method:: resolve(host, port=0, family=socket.AF_INET)
       :async:
 
