@@ -36,8 +36,8 @@ Usage
 -----
 
 Pass a resolver to an ``aiohttp.TCPConnector``. ``aiohttp`` does not take
-ownership of a resolver supplied this way, so close it yourself when you are
-done with it:
+ownership of a resolver supplied this way, so use the resolver as an async
+context manager to close it automatically when you are done with it:
 
 .. code-block:: python
 
@@ -48,16 +48,13 @@ done with it:
 
 
    async def main() -> None:
-       resolver = AsyncMDNSResolver()
-       try:
+       async with AsyncMDNSResolver() as resolver:
            connector = aiohttp.TCPConnector(resolver=resolver)
            async with aiohttp.ClientSession(connector=connector) as session:
                async with session.get("http://example.com") as response:
                    print(response.status)
                async with session.get("http://xxx.local.") as response:
                    print(response.status)
-       finally:
-           await resolver.close()
 
 
    asyncio.run(main())

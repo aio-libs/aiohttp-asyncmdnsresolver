@@ -53,17 +53,15 @@ Quick start
    from aiohttp_asyncmdnsresolver.api import AsyncMDNSResolver
 
    async def main():
-       resolver = AsyncMDNSResolver()
-       # aiohttp does not own a resolver passed to TCPConnector, so close it here.
-       try:
+       # aiohttp does not own a resolver passed to TCPConnector, so use the
+       # resolver as an async context manager to close it on exit.
+       async with AsyncMDNSResolver() as resolver:
            connector = aiohttp.TCPConnector(resolver=resolver)
            async with aiohttp.ClientSession(connector=connector) as session:
                async with session.get('http://example.com') as response:
                    print(response.status)
                async with session.get('http://xxx.local.') as response:
                    print(response.status)
-       finally:
-           await resolver.close()
 
    asyncio.run(main())
 
@@ -82,15 +80,13 @@ when a ``.local`` name may be served by a unicast DNS server as well as mDNS.
    from aiohttp_asyncmdnsresolver.api import AsyncDualMDNSResolver
 
    async def main():
-       resolver = AsyncDualMDNSResolver()
-       # aiohttp does not own a resolver passed to TCPConnector, so close it here.
-       try:
+       # aiohttp does not own a resolver passed to TCPConnector, so use the
+       # resolver as an async context manager to close it on exit.
+       async with AsyncDualMDNSResolver() as resolver:
            connector = aiohttp.TCPConnector(resolver=resolver)
            async with aiohttp.ClientSession(connector=connector) as session:
                async with session.get('http://printer.local.') as response:
                    print(response.status)
-       finally:
-           await resolver.close()
 
    asyncio.run(main())
 

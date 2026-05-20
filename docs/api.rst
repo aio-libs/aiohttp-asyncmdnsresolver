@@ -34,31 +34,21 @@ and :class:`AsyncDualMDNSResolver`:
        import aiohttp
        from aiohttp_asyncmdnsresolver.api import AsyncMDNSResolver
 
-       resolver = AsyncMDNSResolver()
-       try:
-           connector = aiohttp.TCPConnector(resolver=resolver)
-           async with aiohttp.ClientSession(connector=connector) as session:
-               async with session.get("http://KNKSADE41945.local.") as response:
-                   print(response.status)
-       finally:
-           await resolver.close()
-
-   The resolver also supports the async context manager protocol, which closes
-   it automatically on exit -- ``aiohttp.TCPConnector`` does not take ownership
-   of a resolver passed to it, so this is the recommended way to avoid leaking
-   an internally created :class:`~zeroconf.asyncio.AsyncZeroconf` instance. If
-   ``async_zeroconf`` was supplied by the caller, that instance is not closed
-   by the resolver and remains the caller's responsibility to manage, even when
-   using ``async with`` on the resolver::
-
-       import aiohttp
-       from aiohttp_asyncmdnsresolver.api import AsyncMDNSResolver
-
        async with AsyncMDNSResolver() as resolver:
            connector = aiohttp.TCPConnector(resolver=resolver)
            async with aiohttp.ClientSession(connector=connector) as session:
                async with session.get("http://KNKSADE41945.local.") as response:
-                   response.raise_for_status()
+                   print(response.status)
+
+   ``aiohttp.TCPConnector`` does not take ownership of a resolver passed to it,
+   so using the resolver as an async context manager (shown above) is the
+   recommended way to avoid leaking an internally created
+   :class:`~zeroconf.asyncio.AsyncZeroconf` instance. You can also close it
+   explicitly with :meth:`close` -- for example in a ``try``/``finally`` -- when
+   a context manager does not fit your control flow. If ``async_zeroconf`` was
+   supplied by the caller, that instance is not closed by the resolver and
+   remains the caller's responsibility to manage, even when using ``async with``
+   on the resolver.
 
    .. method:: resolve(host, port=0, family=socket.AF_INET)
       :async:
@@ -101,14 +91,11 @@ and :class:`AsyncDualMDNSResolver`:
        import aiohttp
        from aiohttp_asyncmdnsresolver.api import AsyncDualMDNSResolver
 
-       resolver = AsyncDualMDNSResolver()
-       try:
+       async with AsyncDualMDNSResolver() as resolver:
            connector = aiohttp.TCPConnector(resolver=resolver)
            async with aiohttp.ClientSession(connector=connector) as session:
                async with session.get("http://printer.local.") as response:
                    print(response.status)
-       finally:
-           await resolver.close()
 
    .. method:: resolve(host, port=0, family=socket.AF_INET)
       :async:

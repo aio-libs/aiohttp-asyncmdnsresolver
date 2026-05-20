@@ -12,15 +12,13 @@ DEFAULT_HOST = "localhost.local."
 
 
 async def main(host: str) -> None:
-    resolver = AsyncMDNSResolver()
-    # aiohttp does not own a resolver passed to TCPConnector, so close it here.
-    try:
+    # aiohttp does not own a resolver passed to TCPConnector, so use the
+    # resolver as an async context manager to close it on exit.
+    async with AsyncMDNSResolver() as resolver:
         connector = aiohttp.TCPConnector(resolver=resolver)
         async with aiohttp.ClientSession(connector=connector) as session:
             async with session.get(f"http://{host}") as response:
                 print(response.status)
-    finally:
-        await resolver.close()
 
 
 if __name__ == "__main__":
