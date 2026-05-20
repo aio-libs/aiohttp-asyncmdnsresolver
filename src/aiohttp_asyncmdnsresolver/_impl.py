@@ -170,7 +170,7 @@ class AsyncDualMDNSResolver(_AsyncMDNSResolverBase):
                 await asyncio.wait((mdns_task,), return_when=asyncio.ALL_COMPLETED)
             resolve_results: list[ResolveResult] = []
             exceptions: list[BaseException] = []
-            seen_results: set[tuple[str, int, str]] = set()
+            seen_results: set[tuple[int, str]] = set()
             for task in tasks:
                 if not task.done():
                     continue
@@ -179,10 +179,15 @@ class AsyncDualMDNSResolver(_AsyncMDNSResolverBase):
                     continue
                 # If we have multiple results, we need to remove duplicates
                 # and combine the results. We put the mDNS results first
-                # to prioritize them.
+                # to prioritize them. De-duplication keys on (port, host)
+                # only: the two resolvers report different hostname strings
+                # for the same name (mDNS uses zeroconf's trailing-dot
+                # ``info.server`` while DNS echoes the caller's input), so
+                # including hostname would let the same endpoint through
+                # twice. Within one resolve() call an (IP, port) pair
+                # uniquely identifies an endpoint.
                 for result in task.result():
                     result_key = (
-                        result["hostname"],
                         result["port"],
                         result["host"],
                     )

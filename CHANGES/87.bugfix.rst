@@ -1,0 +1,1 @@
+Stopped :class:`~aiohttp_asyncmdnsresolver.api.AsyncDualMDNSResolver` from returning the same address twice when the mDNS and DNS resolvers agree on a ``.local`` name -- by :user:`aiolibsbot`.
