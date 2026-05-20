@@ -60,7 +60,7 @@ and :class:`AsyncDualMDNSResolver`:
       :class:`~zeroconf.asyncio.AsyncZeroconf` instance was created internally
       (no ``async_zeroconf`` was supplied to the constructor) it is closed as
       well; an externally supplied instance is left open for the caller to
-      manage. Safe to call more than once.
+      manage.
 
 
 .. class:: AsyncDualMDNSResolver(*args, *, async_zeroconf=None, mdns_timeout=5.0, **kwargs)
