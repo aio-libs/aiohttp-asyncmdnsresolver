@@ -29,3 +29,10 @@ def test_resolvers_are_drop_in_aiohttp_resolvers() -> None:
     drop-in replacements for ``aiohttp.TCPConnector(resolver=...)``."""
     assert issubclass(api.AsyncMDNSResolver, AsyncResolver)
     assert issubclass(api.AsyncDualMDNSResolver, AsyncResolver)
+
+
+def test_resolvers_support_async_context_manager() -> None:
+    """Both resolvers implement the async context manager protocol."""
+    for resolver_cls in (api.AsyncMDNSResolver, api.AsyncDualMDNSResolver):
+        assert hasattr(resolver_cls, "__aenter__")
+        assert hasattr(resolver_cls, "__aexit__")

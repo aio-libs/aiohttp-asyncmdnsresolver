@@ -321,6 +321,54 @@ async def test_create_destroy_resolver_no_aiozc() -> None:
 
 
 @pytest.mark.asyncio
+async def test_async_context_manager_closes_resolver() -> None:
+    """Test ``async with`` closes an owned resolver on exit."""
+    async with AsyncMDNSResolver(mdns_timeout=0.1) as resolver:
+        assert isinstance(resolver, AsyncMDNSResolver)
+        assert resolver._aiozc is not None
+        assert resolver._aiozc_owner is True
+    assert resolver._aiozc is None
+
+
+@pytest.mark.asyncio
+async def test_async_context_manager_closes_dual_resolver() -> None:
+    """Test ``async with`` closes an owned dual resolver on exit."""
+    async with AsyncDualMDNSResolver(mdns_timeout=0.1) as resolver:
+        assert isinstance(resolver, AsyncDualMDNSResolver)
+        assert resolver._aiozc is not None
+    assert resolver._aiozc is None
+
+
+@pytest.mark.asyncio
+async def test_async_context_manager_returns_self() -> None:
+    """Test ``__aenter__`` yields the resolver instance itself."""
+    resolver = AsyncMDNSResolver(mdns_timeout=0.1)
+    async with resolver as entered:
+        assert entered is resolver
+
+
+@pytest.mark.asyncio
+async def test_async_context_manager_closes_on_exception() -> None:
+    """Test the resolver is closed even when the body raises."""
+    resolver = AsyncMDNSResolver(mdns_timeout=0.1)
+    with pytest.raises(ValueError, match="boom"):
+        async with resolver:
+            raise ValueError("boom")
+    assert resolver._aiozc is None
+
+
+@pytest.mark.asyncio
+async def test_async_context_manager_passed_in_zeroconf_not_closed() -> None:
+    """Test exiting the context manager does not close a borrowed zeroconf."""
+    aiozc = AsyncZeroconf()
+    async with AsyncMDNSResolver(mdns_timeout=0.1, async_zeroconf=aiozc) as resolver:
+        assert resolver._aiozc_owner is False
+    assert resolver._aiozc is None
+    # The borrowed instance is the caller's to close; doing so must still work.
+    await aiozc.async_close()
+
+
+@pytest.mark.asyncio
 async def test_same_results_async_dual_mdns_resolver(
     dual_resolver: AsyncMDNSResolver,
 ) -> None:

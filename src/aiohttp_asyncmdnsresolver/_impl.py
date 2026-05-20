@@ -6,7 +6,7 @@ import asyncio
 import socket
 import sys
 from ipaddress import IPv4Address, IPv6Address
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from aiohttp.resolver import AsyncResolver, ResolveResult
 from zeroconf import (
@@ -17,7 +17,14 @@ from zeroconf import (
 )
 from zeroconf.asyncio import AsyncZeroconf
 
+if TYPE_CHECKING:
+    from types import TracebackType
+
 DEFAULT_TIMEOUT = 5.0
+
+# Emulates ``typing.Self`` (Python 3.11+) so the context manager helpers keep
+# their precise subclass return type while still supporting Python 3.10.
+_ResolverT = TypeVar("_ResolverT", bound="_AsyncMDNSResolverBase")
 
 ResolverType = AddressResolver | AddressResolverIPv4 | AddressResolverIPv6
 
@@ -114,6 +121,19 @@ class _AsyncMDNSResolverBase(AsyncResolver):
             await self._aiozc.async_close()
         await super().close()
         self._aiozc = None  # type: ignore[assignment] # break ref cycles early
+
+    async def __aenter__(self: _ResolverT) -> _ResolverT:
+        """Return the resolver for use as an async context manager."""
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        """Close the resolver when leaving an async context manager."""
+        await self.close()
 
 
 class AsyncMDNSResolver(_AsyncMDNSResolverBase):
