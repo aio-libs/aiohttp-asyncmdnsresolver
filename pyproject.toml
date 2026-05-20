@@ -37,4 +37,5 @@ version = {attr = "aiohttp_asyncmdnsresolver.__version__"}
 [tool.ruff]
 select = [
     "I",  # isort formatting.
+    "UP",  # pyupgrade.
 ]
