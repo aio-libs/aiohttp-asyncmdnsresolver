@@ -54,12 +54,16 @@ Quick start
 
    async def main():
        resolver = AsyncMDNSResolver()
-       connector = aiohttp.TCPConnector(resolver=resolver)
-       async with aiohttp.ClientSession(connector=connector) as session:
-           async with session.get('http://example.com') as response:
-               print(response.status)
-           async with session.get('http://xxx.local.') as response:
-               print(response.status)
+       # aiohttp does not own a resolver passed to TCPConnector, so close it here.
+       try:
+           connector = aiohttp.TCPConnector(resolver=resolver)
+           async with aiohttp.ClientSession(connector=connector) as session:
+               async with session.get('http://example.com') as response:
+                   print(response.status)
+               async with session.get('http://xxx.local.') as response:
+                   print(response.status)
+       finally:
+           await resolver.close()
 
    asyncio.run(main())
 
