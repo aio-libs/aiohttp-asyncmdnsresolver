@@ -68,6 +68,33 @@ Quick start
    asyncio.run(main())
 
 
+Resolving with both mDNS and DNS
+--------------------------------
+
+``AsyncDualMDNSResolver`` is a variant that resolves ``.local`` names over mDNS
+**and** regular DNS concurrently, returning the first successful result. Use it
+when a ``.local`` name may be served by a unicast DNS server as well as mDNS.
+
+.. code-block:: python
+
+   import asyncio
+   import aiohttp
+   from aiohttp_asyncmdnsresolver.api import AsyncDualMDNSResolver
+
+   async def main():
+       resolver = AsyncDualMDNSResolver()
+       # aiohttp does not own a resolver passed to TCPConnector, so close it here.
+       try:
+           connector = aiohttp.TCPConnector(resolver=resolver)
+           async with aiohttp.ClientSession(connector=connector) as session:
+               async with session.get('http://printer.local.') as response:
+                   print(response.status)
+       finally:
+           await resolver.close()
+
+   asyncio.run(main())
+
+
 API documentation
 -----------------
 
