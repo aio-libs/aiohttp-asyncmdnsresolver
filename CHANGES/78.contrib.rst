@@ -1,0 +1,3 @@
+Replaced the ``pyupgrade`` pre-commit hook with Ruff's ``UP`` rule set so a
+single linter handles syntax modernization, targeting Python 3.10+
+-- by :user:`aiolibsbot`.
