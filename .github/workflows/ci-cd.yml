@@ -13,6 +13,19 @@ on:
       - '[0-9].[0-9]+'
 
 
+# Restrict the default GITHUB_TOKEN to read-only. Jobs that need more (deploy)
+# request elevated scopes explicitly, which overrides this for that job only.
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same ref to save CI minutes. Only PR runs are
+# cancelled; pushes to main and tags (which trigger deploy) always run to
+# completion.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+
 jobs:
   lint:
     name: Linter
