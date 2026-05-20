@@ -1,0 +1,1 @@
+Added support for Python 3.14: the test matrix now runs against 3.14 and the distribution advertises the ``Programming Language :: Python :: 3.14`` classifier -- by :user:`aiolibsbot`.
