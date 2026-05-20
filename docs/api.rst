@@ -46,7 +46,10 @@ and :class:`AsyncDualMDNSResolver`:
    The resolver also supports the async context manager protocol, which closes
    it automatically on exit -- ``aiohttp.TCPConnector`` does not take ownership
    of a resolver passed to it, so this is the recommended way to avoid leaking
-   the underlying :class:`~zeroconf.asyncio.AsyncZeroconf` instance::
+   an internally created :class:`~zeroconf.asyncio.AsyncZeroconf` instance. If
+   ``async_zeroconf`` was supplied by the caller, that instance is not closed
+   by the resolver and remains the caller's responsibility to manage, even when
+   using ``async with`` on the resolver::
 
        import aiohttp
        from aiohttp_asyncmdnsresolver.api import AsyncMDNSResolver
