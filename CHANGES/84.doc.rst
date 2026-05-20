@@ -1,1 +1,0 @@
-Completed the documentation landing page: filled the empty Introduction section, added an installation snippet, and added a runnable usage example that closes the resolver in a ``finally`` block. Also fixed the same resolver leak in the ``AsyncMDNSResolver`` reference example -- by :user:`aiolibsbot`.

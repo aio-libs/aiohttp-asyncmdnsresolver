@@ -1,3 +1,0 @@
-Made resolver ``close()`` idempotent -- a second call on a resolver that owns
-its :class:`~zeroconf.asyncio.AsyncZeroconf` no longer raises
-:exc:`AttributeError` -- by :user:`aiolibsbot`.

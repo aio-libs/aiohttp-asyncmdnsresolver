@@ -1,1 +1,0 @@
-Added async context manager support to :class:`~aiohttp_asyncmdnsresolver.api.AsyncMDNSResolver` and :class:`~aiohttp_asyncmdnsresolver.api.AsyncDualMDNSResolver`, so ``async with`` closes the resolver automatically -- by :user:`aiolibsbot`.
