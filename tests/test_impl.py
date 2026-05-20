@@ -665,6 +665,72 @@ async def test_duplicate_ip_differing_hostname_async_dual_mdns_resolver(
 
 
 @pytest.mark.asyncio
+async def test_unspec_combines_ipv4_and_ipv6_async_dual_mdns_resolver(
+    dual_resolver: AsyncDualMDNSResolver,
+) -> None:
+    """Test the dual resolver merges both address families with AF_UNSPEC.
+
+    The concurrent mDNS/DNS combine path was only covered for IPv4. With
+    ``AF_UNSPEC`` the unified ``AddressResolver`` returns both an IPv4 and an
+    IPv6 address; a DNS result echoing one of them must be de-duplicated while
+    the other family is preserved.
+    """
+    with (
+        patch(
+            "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
+            return_value=[
+                ResolveResult(hostname="localhost.local", host="127.0.0.1", port=0)  # type: ignore[typeddict-item]
+            ],
+        ),
+        patch.object(IPv6orIPv4HostResolver, "async_request", return_value=True),
+        patch.object(
+            IPv6orIPv4HostResolver,
+            "ip_addresses_by_version",
+            return_value=[IPv4Address("127.0.0.1"), IPv6Address("::1")],
+        ),
+    ):
+        results = await dual_resolver.resolve(
+            "localhost.local", family=socket.AF_UNSPEC
+        )
+    assert results is not None
+    # mDNS results come first; the DNS IPv4 echo collapses into the mDNS IPv4.
+    assert len(results) == 2
+    assert results[0]["host"] == "127.0.0.1"
+    assert results[1]["host"] == "::1"
+
+
+@pytest.mark.asyncio
+async def test_inet6_distinct_results_async_dual_mdns_resolver(
+    dual_resolver: AsyncDualMDNSResolver,
+) -> None:
+    """Test the dual resolver merges distinct IPv6 results with AF_INET6.
+
+    Exercises the IPv6-only resolver class through the concurrent combine path,
+    which was previously only validated for IPv4.
+    """
+    with (
+        patch(
+            "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
+            return_value=[
+                ResolveResult(hostname="localhost.local.", host="::2", port=0)  # type: ignore[typeddict-item]
+            ],
+        ),
+        patch.object(IPv6HostResolver, "async_request", return_value=True),
+        patch.object(
+            IPv6HostResolver,
+            "ip_addresses_by_version",
+            return_value=[IPv6Address("::1")],
+        ),
+    ):
+        results = await dual_resolver.resolve("localhost.local.", family=socket.AF_INET6)
+    assert results is not None
+    assert len(results) == 2
+    # mDNS result is prioritized ahead of the distinct DNS result.
+    assert results[0]["host"] == "::1"
+    assert results[1]["host"] == "::2"
+
+
+@pytest.mark.asyncio
 async def test_different_results_async_dual_mdns_resolver_zero_timeout(
     dual_resolver: AsyncMDNSResolver,
 ) -> None:
