@@ -1,1 +1,0 @@
-Fixed the README quick-start example leaking the resolver: a resolver passed to ``aiohttp.TCPConnector`` is owned by the caller, so it is now closed in a ``finally`` block -- by :user:`aiolibsbot`.

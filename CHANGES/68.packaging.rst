@@ -1,1 +1,0 @@
-Fixed ``MANIFEST.in`` to graft the ``src/`` tree and dropped references to the non-existent ``packaging/`` directory and ``NOTICE`` file, removing spurious build warnings. The ``py.typed`` marker is now shipped explicitly via ``package-data``, and the distribution advertises the Python 3.10--3.13, CPython, PyPy, and ``Typing :: Typed`` classifiers -- by :user:`aiolibsbot`.
