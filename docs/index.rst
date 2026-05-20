@@ -6,18 +6,65 @@
 aiohttp-asyncmdnsresolver
 =========================
 
-This module provides an ``aiohttp`` resolver that supports mDNS, which uses the ``zeroconf`` library
-to resolve mDNS queries.
-
 Introduction
 ------------
+
+This module provides an ``aiohttp`` resolver that supports mDNS, using the
+``zeroconf`` library to resolve ``.local`` host names. Any host name that is not
+in the ``.local`` domain is delegated to ``aiohttp``'s standard ``AsyncResolver``,
+so either resolver is a drop-in replacement for it.
+
+Two resolver classes are provided:
+
+:class:`~aiohttp_asyncmdnsresolver.api.AsyncMDNSResolver`
+    Resolves ``.local`` names with mDNS only, and every other name with regular
+    DNS.
+
+:class:`~aiohttp_asyncmdnsresolver.api.AsyncDualMDNSResolver`
+    Resolves ``.local`` names with **both** mDNS and regular DNS concurrently and
+    returns the first successful result. Use this when ``.local`` names may also
+    be served by a unicast DNS server.
+
+Installation
+------------
+
+.. code-block:: console
+
+   $ pip install aiohttp-asyncmdnsresolver
 
 Usage
 -----
 
-The API provides the :class:`aiohttp_asyncmdnsresolver.api.AsyncMDNSResolver` and
-:class:`aiohttp_asyncmdnsresolver.api.AsyncDualMDNSResolver` classes that can be
-used to resolve mDNS queries and fallback to ``AsyncResolver`` for non-MDNS hosts.
+Pass a resolver to an ``aiohttp.TCPConnector``. ``aiohttp`` does not take
+ownership of a resolver supplied this way, so close it yourself when you are
+done with it:
+
+.. code-block:: python
+
+   import asyncio
+
+   import aiohttp
+   from aiohttp_asyncmdnsresolver.api import AsyncMDNSResolver
+
+
+   async def main() -> None:
+       resolver = AsyncMDNSResolver()
+       try:
+           connector = aiohttp.TCPConnector(resolver=resolver)
+           async with aiohttp.ClientSession(connector=connector) as session:
+               async with session.get("http://example.com") as response:
+                   print(response.status)
+               async with session.get("http://xxx.local.") as response:
+                   print(response.status)
+       finally:
+           await resolver.close()
+
+
+   asyncio.run(main())
+
+Swap :class:`~aiohttp_asyncmdnsresolver.api.AsyncMDNSResolver` for
+:class:`~aiohttp_asyncmdnsresolver.api.AsyncDualMDNSResolver` to resolve ``.local``
+names with both mDNS and unicast DNS at once.
 
 API documentation
 -----------------
