@@ -41,6 +41,35 @@ _IP_VERSION_TO_FAMILY = {
 _NUMERIC_SOCKET_FLAGS = socket.AI_NUMERICHOST | socket.AI_NUMERICSERV
 
 
+async def _cancel_pending_tasks(tasks: tuple[asyncio.Task[Any], ...]) -> None:
+    """Cancel any still-pending tasks and await them to settle.
+
+    ``asyncio.wait()`` does not cancel its child tasks when the awaiting
+    coroutine is itself cancelled, so the tasks must be cleaned up explicitly
+    to avoid orphaning work against the shared ``zeroconf`` instance.
+
+    If the surrounding coroutine is being cancelled, the cancellation is
+    re-raised after every pending task has been cancelled so it is not
+    swallowed.
+    """
+    pending = [task for task in tasks if not task.done()]
+    for task in pending:
+        task.cancel()
+    reraise = False
+    for task in pending:
+        try:
+            await task  # clear log traceback
+        except asyncio.CancelledError:
+            if (
+                sys.version_info >= (3, 11)
+                and (current_task := asyncio.current_task())
+                and current_task.cancelling()
+            ):
+                reraise = True
+    if reraise:
+        raise asyncio.CancelledError
+
+
 def _to_resolve_result(
     hostname: str, port: int, ipaddress: IPv4Address | IPv6Address
 ) -> ResolveResult:
@@ -150,48 +179,43 @@ class AsyncDualMDNSResolver(_AsyncMDNSResolverBase):
         else:
             mdns_task = loop.create_task(resolve_via_mdns)
             dns_task = loop.create_task(resolve_via_dns)
-        await asyncio.wait((mdns_task, dns_task), return_when=asyncio.FIRST_COMPLETED)
-        if mdns_task.done() and mdns_task.exception():
-            await asyncio.wait((dns_task,), return_when=asyncio.ALL_COMPLETED)
-        elif dns_task.done() and dns_task.exception():
-            await asyncio.wait((mdns_task,), return_when=asyncio.ALL_COMPLETED)
-        resolve_results: list[ResolveResult] = []
-        exceptions: list[BaseException] = []
-        seen_results: set[tuple[str, int, str]] = set()
-        for task in (mdns_task, dns_task):
-            if task.done():
-                if exc := task.exception():
-                    exceptions.append(exc)
-                else:
-                    # If we have multiple results, we need to remove duplicates
-                    # and combine the results. We put the mDNS results first
-                    # to prioritize them.
-                    for result in task.result():
-                        result_key = (
-                            result["hostname"],
-                            result["port"],
-                            result["host"],
-                        )
-                        if result_key not in seen_results:
-                            seen_results.add(result_key)
-                            resolve_results.append(result)
-            else:
-                task.cancel()
-                try:
-                    await task  # clear log traceback
-                except asyncio.CancelledError:
-                    if (
-                        sys.version_info >= (3, 11)
-                        and (current_task := asyncio.current_task())
-                        and current_task.cancelling()
-                    ):
-                        raise
+        tasks = (mdns_task, dns_task)
+        try:
+            await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+            if mdns_task.done() and mdns_task.exception():
+                await asyncio.wait((dns_task,), return_when=asyncio.ALL_COMPLETED)
+            elif dns_task.done() and dns_task.exception():
+                await asyncio.wait((mdns_task,), return_when=asyncio.ALL_COMPLETED)
+            resolve_results: list[ResolveResult] = []
+            exceptions: list[BaseException] = []
+            seen_results: set[tuple[str, int, str]] = set()
+            # Only completed tasks contribute results; the slower loser (or
+            # both tasks on cancellation) is cancelled in the finally block.
+            for task in tasks:
+                if task.done():
+                    if exc := task.exception():
+                        exceptions.append(exc)
+                    else:
+                        # If we have multiple results, we need to remove
+                        # duplicates and combine the results. We put the mDNS
+                        # results first to prioritize them.
+                        for result in task.result():
+                            result_key = (
+                                result["hostname"],
+                                result["port"],
+                                result["host"],
+                            )
+                            if result_key not in seen_results:
+                                seen_results.add(result_key)
+                                resolve_results.append(result)
 
-        if resolve_results:
-            return resolve_results
+            if resolve_results:
+                return resolve_results
 
-        exception_strings = ", ".join(
-            exc.strerror or str(exc) if isinstance(exc, OSError) else str(exc)
-            for exc in exceptions
-        )
-        raise OSError(None, exception_strings)
+            exception_strings = ", ".join(
+                exc.strerror or str(exc) if isinstance(exc, OSError) else str(exc)
+                for exc in exceptions
+            )
+            raise OSError(None, exception_strings)
+        finally:
+            await _cancel_pending_tasks(tasks)

@@ -1,0 +1,1 @@
+Cancelled the in-flight mDNS and DNS lookup tasks when ``AsyncDualMDNSResolver.resolve()`` is itself cancelled, so a cancelled lookup no longer orphans tasks that keep running against ``zeroconf`` -- by :user:`aiolibsbot`.

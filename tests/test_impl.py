@@ -605,3 +605,45 @@ async def test_no_cancel_swallow_dual_mdns_resolver(
         resolve_tasks.cancel()
         with pytest.raises(asyncio.CancelledError):
             await resolve_tasks
+
+
+@pytest.mark.asyncio
+async def test_cancel_cancels_child_tasks_dual_mdns_resolver(
+    dual_resolver: AsyncMDNSResolver,
+) -> None:
+    """Cancelling resolve() must cancel both child tasks, not orphan them.
+
+    asyncio.wait() does not cancel its child tasks when the awaiting coroutine
+    is cancelled, so without explicit cleanup the mDNS and DNS tasks keep
+    running against zeroconf after the consumer cancels the lookup.
+    """
+    cancelled = {"mdns": False, "dns": False}
+
+    async def _mdns_op(*args: Any, **kwargs: Any) -> NoReturn:
+        try:
+            await asyncio.sleep(0.5)
+        except asyncio.CancelledError:
+            cancelled["mdns"] = True
+            raise
+        raise RuntimeError("Should not finish")
+
+    async def _dns_op(*args: Any, **kwargs: Any) -> NoReturn:
+        try:
+            await asyncio.sleep(0.5)
+        except asyncio.CancelledError:
+            cancelled["dns"] = True
+            raise
+        raise RuntimeError("Should not finish")
+
+    with (
+        patch("aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve", _dns_op),
+        patch.object(IPv4HostResolver, "async_request", _mdns_op),
+    ):
+        resolve_task = asyncio.create_task(dual_resolver.resolve("localhost.local."))
+        await asyncio.sleep(0.1)
+        resolve_task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await resolve_task
+
+    assert cancelled["mdns"] is True
+    assert cancelled["dns"] is True
