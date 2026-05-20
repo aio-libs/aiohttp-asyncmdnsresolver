@@ -188,6 +188,25 @@ async def test_resolve_mdns_name_unspec_trailing_dot(
 
 
 @pytest.mark.asyncio
+async def test_resolve_mdns_name_mixed_case(resolver: AsyncMDNSResolver) -> None:
+    """Test the .local suffix is matched case-insensitively (RFC 6762)."""
+    with (
+        patch.object(IPv6orIPv4HostResolver, "async_request", return_value=True),
+        patch.object(
+            IPv6orIPv4HostResolver,
+            "ip_addresses_by_version",
+            return_value=[IPv4Address("127.0.0.1"), IPv6Address("::1")],
+        ),
+    ):
+        result = await resolver.resolve("Localhost.LOCAL", family=socket.AF_UNSPEC)
+
+    assert result is not None
+    assert len(result) == 2
+    assert result[0]["host"] == "127.0.0.1"
+    assert result[1]["host"] == "::1"
+
+
+@pytest.mark.asyncio
 async def test_resolve_mdns_name_af_inet(resolver: AsyncMDNSResolver) -> None:
     """Test the resolve method with socket.AF_INET family."""
     with (
