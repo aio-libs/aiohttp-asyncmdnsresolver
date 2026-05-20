@@ -1,0 +1,1 @@
+Documented :class:`~aiohttp_asyncmdnsresolver.api.AsyncDualMDNSResolver` in the README quick start so the landing page covers the full public API, not just :class:`~aiohttp_asyncmdnsresolver.api.AsyncMDNSResolver` -- by :user:`aiolibsbot`.
