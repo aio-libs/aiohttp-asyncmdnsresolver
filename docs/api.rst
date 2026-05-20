@@ -19,13 +19,14 @@ and :class:`AsyncDualMDNSResolver`:
    This class functions the same as ``aiohttp.resolver.AsyncResolver``,
    but with the added ability to resolve mDNS queries.
 
-    :param ``AsyncZeroconf`` async_zeroconf: If an ``AsyncZeroconf`` instance is
-        passed, it will be used to resolve mDNS queries. If not, a new
-        instance will be created.
+   :param async_zeroconf: If an :class:`~zeroconf.asyncio.AsyncZeroconf` instance is
+      passed, it will be used to resolve mDNS queries. If not, a new
+      instance will be created.
+   :type async_zeroconf: ~zeroconf.asyncio.AsyncZeroconf
 
-    :param float mdns_timeout: The timeout for the mDNS query in seconds. If not provided
-        the default timeout is 5 seconds. If the mdns_timeout is set to 0, the
-        query will only use the cache and will not perform a new query.
+   :param float mdns_timeout: The timeout for the mDNS query in seconds. If not provided
+      the default timeout is 5 seconds. If the mdns_timeout is set to 0, the
+      query will only use the cache and will not perform a new query.
 
    Example::
 
@@ -41,8 +42,8 @@ and :class:`AsyncDualMDNSResolver`:
 .. class:: AsyncDualMDNSResolver(*args, *, async_zeroconf=None, mdns_timeout=5.0, **kwargs)
 
    This resolver is a variant of :class:`AsyncMDNSResolver` that resolves ``.local``
-    names with both mDNS and regular DNS. It takes the same arguments as
-    :class:`AsyncMDNSResolver`, and is used in the same way.
+   names with both mDNS and regular DNS. It takes the same arguments as
+   :class:`AsyncMDNSResolver`, and is used in the same way.
 
    - The first successful result from either resolver is returned.
    - If both resolvers fail, an exception is raised.

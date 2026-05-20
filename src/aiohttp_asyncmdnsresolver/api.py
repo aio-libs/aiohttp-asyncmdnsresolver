@@ -1,4 +1,4 @@
-"""Public API of the property caching library."""
+"""Public API of the aiohttp-asyncmdnsresolver library."""
 
 from ._impl import AsyncDualMDNSResolver, AsyncMDNSResolver
 

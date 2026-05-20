@@ -83,6 +83,7 @@ except ImportError:
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "aiohttp": ("https://docs.aiohttp.org/en/stable/", None),
+    "zeroconf": ("https://python-zeroconf.readthedocs.io/en/latest/", None),
 }
 
 
