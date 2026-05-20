@@ -1,0 +1,1 @@
+Documented the ``resolve()`` and ``close()`` methods of ``AsyncMDNSResolver`` and ``AsyncDualMDNSResolver`` in the API reference, including the ``.local`` routing behaviour and the ``AsyncZeroconf`` ownership semantics of ``close()`` -- by :user:`aiolibsbot`.
