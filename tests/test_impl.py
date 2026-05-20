@@ -653,3 +653,179 @@ async def test_no_cancel_swallow_dual_mdns_resolver(
         resolve_tasks.cancel()
         with pytest.raises(asyncio.CancelledError):
             await resolve_tasks
+
+
+@pytest.mark.asyncio
+async def test_cancel_cancels_child_tasks_dual_mdns_resolver(
+    dual_resolver: AsyncDualMDNSResolver,
+) -> None:
+    """Test cancelling resolve() cancels both child tasks instead of orphaning them."""
+    cancelled = {"mdns": False, "dns": False}
+
+    async def _mdns_op(*args: Any, **kwargs: Any) -> NoReturn:
+        try:
+            await asyncio.sleep(0.5)
+        except asyncio.CancelledError:
+            cancelled["mdns"] = True
+            raise
+        raise RuntimeError("Should not finish")
+
+    async def _dns_op(*args: Any, **kwargs: Any) -> NoReturn:
+        try:
+            await asyncio.sleep(0.5)
+        except asyncio.CancelledError:
+            cancelled["dns"] = True
+            raise
+        raise RuntimeError("Should not finish")
+
+    with (
+        patch("aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve", _dns_op),
+        patch.object(IPv4HostResolver, "async_request", _mdns_op),
+    ):
+        resolve_task = asyncio.create_task(dual_resolver.resolve("localhost.local."))
+        await asyncio.sleep(0.1)
+        resolve_task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await resolve_task
+
+    assert cancelled["mdns"] is True
+    assert cancelled["dns"] is True
+
+
+@pytest.mark.asyncio
+async def test_loser_non_cancel_exception_does_not_override_result_dual_mdns_resolver(
+    dual_resolver: AsyncDualMDNSResolver,
+) -> None:
+    """Test loser raising a non-cancel exception during cleanup does not override winner."""
+
+    async def _dns_swallows_cancel_and_raises(*args: Any, **kwargs: Any) -> NoReturn:
+        try:
+            await asyncio.sleep(1.0)
+        except asyncio.CancelledError:
+            raise RuntimeError("Loser blew up on cancel") from None
+        raise RuntimeError("Should not finish")
+
+    with (
+        patch(
+            "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",
+            _dns_swallows_cancel_and_raises,
+        ),
+        patch.object(IPv4HostResolver, "async_request", return_value=True),
+        patch.object(
+            IPv4HostResolver,
+            "ip_addresses_by_version",
+            return_value=[IPv4Address("127.0.0.1")],
+        ),
+    ):
+        results = await dual_resolver.resolve("localhost.local.")
+
+    assert results is not None
+    assert len(results) == 1
+    assert results[0]["host"] == "127.0.0.1"
+
+
+@pytest.mark.asyncio
+async def test_cancel_during_loser_wait_dual_mdns_resolver(
+    dual_resolver: AsyncDualMDNSResolver,
+) -> None:
+    """Test cancellation while waiting for the loser (after winner failed) propagates."""
+    dns_cancelled = False
+
+    async def _mdns_fast_failure(*args: Any, **kwargs: Any) -> NoReturn:
+        raise OSError(None, "MDNS lookup failed")
+
+    async def _dns_slow(*args: Any, **kwargs: Any) -> NoReturn:
+        nonlocal dns_cancelled
+        try:
+            await asyncio.sleep(1.0)
+        except asyncio.CancelledError:
+            dns_cancelled = True
+            raise
+        raise RuntimeError("Should not finish")
+
+    with (
+        patch("aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve", _dns_slow),
+        patch.object(IPv4HostResolver, "async_request", _mdns_fast_failure),
+    ):
+        resolve_task = asyncio.create_task(dual_resolver.resolve("localhost.local."))
+        await asyncio.sleep(0.05)
+        resolve_task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await resolve_task
+
+    assert dns_cancelled is True
+
+
+@pytest.mark.asyncio
+async def test_cancel_after_winner_completes_dual_mdns_resolver(
+    dual_resolver: AsyncDualMDNSResolver,
+) -> None:
+    """Test cancellation arriving while the loser is being drained propagates."""
+    dns_cancelled = False
+
+    async def _dns_slow(*args: Any, **kwargs: Any) -> NoReturn:
+        nonlocal dns_cancelled
+        try:
+            await asyncio.sleep(1.0)
+        except asyncio.CancelledError:
+            dns_cancelled = True
+            raise
+        raise RuntimeError("Should not finish")
+
+    with (
+        patch("aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve", _dns_slow),
+        patch.object(IPv4HostResolver, "async_request", return_value=True),
+        patch.object(
+            IPv4HostResolver,
+            "ip_addresses_by_version",
+            return_value=[IPv4Address("127.0.0.1")],
+        ),
+    ):
+        resolve_task = asyncio.create_task(dual_resolver.resolve("localhost.local."))
+        # Yield enough times for resolve() to advance past asyncio.wait, collect
+        # the mDNS result and enter the gather await inside the finally block.
+        for _ in range(5):
+            await asyncio.sleep(0)
+        resolve_task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await resolve_task
+
+    assert dns_cancelled is True
+
+
+@pytest.mark.asyncio
+async def test_double_cancel_dual_mdns_resolver(
+    dual_resolver: AsyncDualMDNSResolver,
+) -> None:
+    """Test that double-cancelling resolve() still propagates CancelledError."""
+    cancelled = {"mdns": False, "dns": False}
+
+    async def _mdns_op(*args: Any, **kwargs: Any) -> NoReturn:
+        try:
+            await asyncio.sleep(1.0)
+        except asyncio.CancelledError:
+            cancelled["mdns"] = True
+            raise
+        raise RuntimeError("Should not finish")
+
+    async def _dns_op(*args: Any, **kwargs: Any) -> NoReturn:
+        try:
+            await asyncio.sleep(1.0)
+        except asyncio.CancelledError:
+            cancelled["dns"] = True
+            raise
+        raise RuntimeError("Should not finish")
+
+    with (
+        patch("aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve", _dns_op),
+        patch.object(IPv4HostResolver, "async_request", _mdns_op),
+    ):
+        resolve_task = asyncio.create_task(dual_resolver.resolve("localhost.local."))
+        await asyncio.sleep(0.05)
+        resolve_task.cancel()
+        resolve_task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await resolve_task
+
+    assert cancelled["mdns"] is True
+    assert cancelled["dns"] is True
