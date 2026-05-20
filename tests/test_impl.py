@@ -1,6 +1,6 @@
 import asyncio
 import socket
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 from ipaddress import IPv4Address, IPv6Address
 from typing import Any, NoReturn
 from unittest.mock import patch
@@ -51,6 +51,27 @@ async def resolver() -> AsyncGenerator[AsyncMDNSResolver]:
     resolver = AsyncMDNSResolver(mdns_timeout=0.1)
     yield resolver
     await resolver.close()
+
+
+@pytest_asyncio.fixture
+async def mdns_resolver() -> AsyncGenerator[Callable[..., AsyncMDNSResolver]]:
+    """Return a factory that builds AsyncMDNSResolver instances.
+
+    Each resolver is constructed through the public constructor, so tests can
+    select ``mdns_timeout`` (or other options) without poking private state,
+    and every instance is closed during teardown.
+    """
+    resolvers: list[AsyncMDNSResolver] = []
+
+    def _factory(**kwargs: Any) -> AsyncMDNSResolver:
+        kwargs.setdefault("mdns_timeout", 0.1)
+        resolver = AsyncMDNSResolver(**kwargs)
+        resolvers.append(resolver)
+        return resolver
+
+    yield _factory
+    for resolver in resolvers:
+        await resolver.close()
 
 
 @pytest_asyncio.fixture
@@ -271,6 +292,52 @@ async def test_resolve_mdns_name_af_inet6(resolver: AsyncMDNSResolver) -> None:
     assert len(result) == 1
     assert result[0]["hostname"] == "localhost.local."
     assert result[0]["host"] == "::1"
+
+
+@pytest.mark.asyncio
+async def test_resolve_mdns_name_zero_timeout_cache_miss_no_network(
+    mdns_resolver: Callable[..., AsyncMDNSResolver],
+) -> None:
+    """Test mdns_timeout=0 raises on a cache miss without a network query.
+
+    With a falsy ``mdns_timeout`` the resolver is cache-only: a cache miss must
+    not fall back to an mDNS request on the network, so the lookup fails.
+    """
+    resolver = mdns_resolver(mdns_timeout=0)
+    with (
+        patch.object(IPv4HostResolver, "load_from_cache", return_value=False),
+        patch.object(IPv4HostResolver, "async_request") as async_request,
+        patch.object(
+            IPv4HostResolver,
+            "ip_addresses_by_version",
+            return_value=[],
+        ),
+        pytest.raises(OSError, match="MDNS lookup failed"),
+    ):
+        await resolver.resolve("localhost.local")
+
+    async_request.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_resolve_mdns_name_none_timeout_cache_miss_no_network(
+    mdns_resolver: Callable[..., AsyncMDNSResolver],
+) -> None:
+    """Test mdns_timeout=None behaves cache-only like mdns_timeout=0."""
+    resolver = mdns_resolver(mdns_timeout=None)
+    with (
+        patch.object(IPv4HostResolver, "load_from_cache", return_value=False),
+        patch.object(IPv4HostResolver, "async_request") as async_request,
+        patch.object(
+            IPv4HostResolver,
+            "ip_addresses_by_version",
+            return_value=[],
+        ),
+        pytest.raises(OSError, match="MDNS lookup failed"),
+    ):
+        await resolver.resolve("localhost.local")
+
+    async_request.assert_not_called()
 
 
 @pytest.mark.asyncio

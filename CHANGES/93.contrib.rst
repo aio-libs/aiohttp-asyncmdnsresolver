@@ -1,0 +1,3 @@
+Added regression tests covering the cache-only behavior of
+``AsyncMDNSResolver`` when ``mdns_timeout`` is ``0`` or ``None`` -- by
+:user:`aiolibsbot`.
