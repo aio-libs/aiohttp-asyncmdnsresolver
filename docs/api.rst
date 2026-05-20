@@ -42,6 +42,26 @@ and :class:`AsyncDualMDNSResolver`:
        finally:
            await resolver.close()
 
+   .. method:: resolve(host, port=0, family=socket.AF_INET)
+      :async:
+
+      Resolve *host* and return a list of ``aiohttp.abc.ResolveResult`` mappings.
+
+      Names in the ``.local`` domain (matched case-insensitively, per
+      :rfc:`6762`) are resolved over mDNS using ``zeroconf``; every other name
+      is delegated to ``aiohttp.resolver.AsyncResolver``. mDNS lookups consult
+      the ``zeroconf`` cache first and only send a query on the network when the
+      cache misses. Raises ``OSError`` when the name cannot be resolved.
+
+   .. method:: close()
+      :async:
+
+      Close the resolver and release its resources. When the
+      :class:`~zeroconf.asyncio.AsyncZeroconf` instance was created internally
+      (no ``async_zeroconf`` was supplied to the constructor) it is closed as
+      well; an externally supplied instance is left open for the caller to
+      manage. Safe to call more than once.
+
 
 .. class:: AsyncDualMDNSResolver(*args, *, async_zeroconf=None, mdns_timeout=5.0, **kwargs)
 
@@ -53,3 +73,18 @@ and :class:`AsyncDualMDNSResolver`:
    - If both resolvers fail, an exception is raised.
    - If both resolvers return results at the same time, the results are
      combined and duplicates are removed.
+
+   .. method:: resolve(host, port=0, family=socket.AF_INET)
+      :async:
+
+      Behaves like :meth:`AsyncMDNSResolver.resolve`, except that ``.local``
+      names are resolved over mDNS and unicast DNS concurrently following the
+      rules above. Non-``.local`` names are delegated to
+      ``aiohttp.resolver.AsyncResolver``. Raises ``OSError`` when neither
+      resolver can resolve the name.
+
+   .. method:: close()
+      :async:
+
+      Close the resolver and release its resources, with the same ownership
+      semantics as :meth:`AsyncMDNSResolver.close`.
