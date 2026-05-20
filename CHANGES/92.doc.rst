@@ -1,0 +1,1 @@
+Updated the README quick starts, docs landing page, runnable example and API reference to use ``async with`` so copy-pasted code closes the resolver automatically instead of demonstrating the manual ``try``/``finally`` close -- by :user:`aiolibsbot`.
