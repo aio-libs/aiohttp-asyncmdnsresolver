@@ -6,7 +6,7 @@ import asyncio
 import socket
 import sys
 from ipaddress import IPv4Address, IPv6Address
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any
 
 from aiohttp.resolver import AsyncResolver, ResolveResult
 from zeroconf import (
@@ -19,7 +19,7 @@ from zeroconf.asyncio import AsyncZeroconf
 
 DEFAULT_TIMEOUT = 5.0
 
-ResolverType = Union[AddressResolver, AddressResolverIPv4, AddressResolverIPv6]
+ResolverType = AddressResolver | AddressResolverIPv4 | AddressResolverIPv6
 
 _FAMILY_TO_RESOLVER_CLASS: dict[
     socket.AddressFamily,

@@ -1,0 +1,3 @@
+Modernized the internal ``ResolverType`` alias to use the :pep:`604` union
+syntax (``X | Y``) now that the minimum supported Python is 3.10
+-- by :user:`aiolibsbot`.
