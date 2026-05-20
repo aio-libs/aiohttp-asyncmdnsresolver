@@ -1,0 +1,3 @@
+Hardened the CI workflow: the default ``GITHUB_TOKEN`` is now restricted to
+``contents: read``, and a concurrency group cancels superseded in-progress
+pull request runs to conserve CI resources -- by :user:`aiolibsbot`.
