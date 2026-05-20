@@ -1,0 +1,3 @@
+Expanded the public-API regression test to cover ``AsyncDualMDNSResolver``,
+``api.__all__``, and the ``aiohttp.resolver.AsyncResolver`` drop-in subclass
+guarantee for both resolvers.
