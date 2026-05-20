@@ -1,0 +1,3 @@
+Migrated CI runners from ``actions/setup-python`` to ``astral-sh/setup-uv``
+so dependencies and Python interpreters are provisioned via ``uv`` instead
+of system ``pip`` -- by :user:`aiolibsbot`.
