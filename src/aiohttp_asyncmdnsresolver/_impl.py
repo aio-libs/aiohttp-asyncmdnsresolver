@@ -106,8 +106,11 @@ class _AsyncMDNSResolverBase(AsyncResolver):
         return self._addresses_from_info_or_raise(info, port, family)
 
     async def close(self) -> None:
-        """Close the resolver."""
-        if self._aiozc_owner:
+        """Close the resolver.
+
+        Safe to call more than once; subsequent calls are no-ops.
+        """
+        if self._aiozc_owner and self._aiozc is not None:
             await self._aiozc.async_close()
         await super().close()
         self._aiozc = None  # type: ignore[assignment] # break ref cycles early
