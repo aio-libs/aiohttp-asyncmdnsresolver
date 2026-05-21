@@ -1,0 +1,3 @@
+Added tests covering ``AsyncDualMDNSResolver``'s concurrent mDNS/DNS
+merge for the ``AF_UNSPEC`` and ``AF_INET6`` address families, which were
+previously only exercised for IPv4 -- by :user:`aiolibsbot`.
