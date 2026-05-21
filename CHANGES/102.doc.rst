@@ -1,0 +1,1 @@
+Documented that mDNS resolution of ``.local`` names is not authenticated and should not be treated as a trust boundary, with guidance to use HTTPS with certificate verification (optionally certificate pinning or mTLS) for sensitive ``.local`` services and a note that ``mdns_timeout=0`` or ``None`` restricts mDNS to the ``zeroconf`` cache -- by :user:`bdraco`.

@@ -63,6 +63,18 @@ Swap :class:`~aiohttp_asyncmdnsresolver.api.AsyncMDNSResolver` for
 :class:`~aiohttp_asyncmdnsresolver.api.AsyncDualMDNSResolver` to resolve ``.local``
 names with both mDNS and unicast DNS at once.
 
+Security note
+-------------
+
+mDNS resolution of ``.local`` names is not authenticated; any host on the same
+local link can answer for any ``.local`` name, so the resolved address should
+not be treated as a trust boundary. When connecting to sensitive ``.local``
+services, use HTTPS with certificate verification, and consider certificate
+pinning or mTLS. Passing ``mdns_timeout=0`` or ``mdns_timeout=None`` restricts
+mDNS resolution to the existing ``zeroconf`` cache and avoids sending new
+queries on the network, though cached entries may themselves originate from
+on-link responses.
+
 API documentation
 -----------------
 
