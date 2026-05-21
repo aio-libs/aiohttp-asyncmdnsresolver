@@ -410,12 +410,46 @@ async def test_create_destroy_resolver_no_aiozc() -> None:
 
 
 @pytest.mark.asyncio
+async def test_owned_zeroconf_not_constructed_until_first_use() -> None:
+    """Constructing an owned resolver must not open mDNS sockets (issue #98)."""
+    with patch(
+        "aiohttp_asyncmdnsresolver._impl.AsyncZeroconf", autospec=True
+    ) as mock_aiozc:
+        resolver = AsyncMDNSResolver(mdns_timeout=0.1)
+        mock_aiozc.assert_not_called()
+        assert resolver._aiozc is None
+        # The owned instance is created only when the .local path needs it.
+        ensured = resolver._ensure_aiozc()
+        mock_aiozc.assert_called_once_with()
+        assert ensured is mock_aiozc.return_value
+        assert resolver._ensure_aiozc() is ensured  # idempotent
+        await resolver.close()
+        mock_aiozc.return_value.async_close.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_passed_in_zeroconf_used_without_constructing() -> None:
+    """A caller-supplied zeroconf is used as-is, never re-constructed."""
+    aiozc = AsyncZeroconf()
+    with patch("aiohttp_asyncmdnsresolver._impl.AsyncZeroconf") as mock_aiozc:
+        resolver = AsyncMDNSResolver(mdns_timeout=0.1, async_zeroconf=aiozc)
+        assert resolver._aiozc is aiozc
+        assert resolver._ensure_aiozc() is aiozc
+        mock_aiozc.assert_not_called()
+    await resolver.close()
+    await aiozc.async_close()
+
+
+@pytest.mark.asyncio
 async def test_async_context_manager_closes_resolver() -> None:
     """Test ``async with`` closes an owned resolver on exit."""
     async with AsyncMDNSResolver(mdns_timeout=0.1) as resolver:
         assert isinstance(resolver, AsyncMDNSResolver)
-        assert resolver._aiozc is not None
+        # Owned zeroconf is constructed lazily, so it is absent until first use.
+        assert resolver._aiozc is None
         assert resolver._aiozc_owner is True
+        assert resolver._ensure_aiozc() is not None
+        assert resolver._aiozc is not None
     assert resolver._aiozc is None
 
 
@@ -424,6 +458,9 @@ async def test_async_context_manager_closes_dual_resolver() -> None:
     """Test ``async with`` closes an owned dual resolver on exit."""
     async with AsyncDualMDNSResolver(mdns_timeout=0.1) as resolver:
         assert isinstance(resolver, AsyncDualMDNSResolver)
+        # Owned zeroconf is constructed lazily, so it is absent until first use.
+        assert resolver._aiozc is None
+        assert resolver._ensure_aiozc() is not None
         assert resolver._aiozc is not None
     assert resolver._aiozc is None
 

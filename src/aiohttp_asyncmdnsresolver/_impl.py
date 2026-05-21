@@ -84,7 +84,21 @@ class _AsyncMDNSResolverBase(AsyncResolver):
         super().__init__(*args, **kwargs)
         self._mdns_timeout = mdns_timeout
         self._aiozc_owner = async_zeroconf is None
-        self._aiozc = async_zeroconf or AsyncZeroconf()
+        # When this resolver owns its zeroconf instance, defer constructing it
+        # (which opens mDNS multicast sockets and starts listener threads) until
+        # the first ``.local`` lookup. Resolvers that only handle unicast names
+        # never pay that cost. A caller-supplied instance is used as-is.
+        self._aiozc: AsyncZeroconf | None = async_zeroconf
+
+    def _ensure_aiozc(self) -> AsyncZeroconf:
+        """Return the owned ``AsyncZeroconf``, constructing it on first use.
+
+        Called from the ``.local`` resolution path so the multicast sockets are
+        opened lazily rather than at construction time.
+        """
+        if self._aiozc is None:
+            self._aiozc = AsyncZeroconf()
+        return self._aiozc
 
     def _make_resolver(self, host: str, family: socket.AddressFamily) -> ResolverType:
         """Create an mDNS resolver."""
@@ -109,7 +123,9 @@ class _AsyncMDNSResolverBase(AsyncResolver):
     ) -> list[ResolveResult]:
         """Resolve a host name to an IP address using mDNS."""
         if self._mdns_timeout:
-            await info.async_request(self._aiozc.zeroconf, self._mdns_timeout * 1000)
+            await info.async_request(
+                self._ensure_aiozc().zeroconf, self._mdns_timeout * 1000
+            )
         return self._addresses_from_info_or_raise(info, port, family)
 
     async def close(self) -> None:
@@ -120,7 +136,7 @@ class _AsyncMDNSResolverBase(AsyncResolver):
         if self._aiozc_owner and self._aiozc is not None:
             await self._aiozc.async_close()
         await super().close()
-        self._aiozc = None  # type: ignore[assignment] # break ref cycles early
+        self._aiozc = None  # break ref cycles early
 
     async def __aenter__(self: _ResolverT) -> _ResolverT:
         """Return the resolver for use as an async context manager."""
@@ -145,8 +161,9 @@ class AsyncMDNSResolver(_AsyncMDNSResolverBase):
         """Resolve a host name to an IP address."""
         if not _is_local_name(host):
             return await super().resolve(host, port, family)
+        aiozc = self._ensure_aiozc()
         info = self._make_resolver(host, family)
-        if info.load_from_cache(self._aiozc.zeroconf):
+        if info.load_from_cache(aiozc.zeroconf):
             return self._addresses_from_info_or_raise(info, port, family)
         return await self._resolve_mdns(info, port, family)
 
@@ -169,8 +186,9 @@ class AsyncDualMDNSResolver(_AsyncMDNSResolverBase):
         """Resolve a host name to an IP address."""
         if not _is_local_name(host):
             return await super().resolve(host, port, family)
+        aiozc = self._ensure_aiozc()
         info = self._make_resolver(host, family)
-        if info.load_from_cache(self._aiozc.zeroconf):
+        if info.load_from_cache(aiozc.zeroconf):
             return self._addresses_from_info_or_raise(info, port, family)
         resolve_via_mdns = self._resolve_mdns(info, port, family)
         resolve_via_dns = super().resolve(host, port, family)

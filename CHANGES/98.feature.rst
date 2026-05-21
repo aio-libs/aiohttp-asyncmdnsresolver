@@ -1,0 +1,3 @@
+Deferred construction of the owned ``AsyncZeroconf`` instance until the first
+``.local`` lookup, so resolvers that only handle unicast names no longer open
+mDNS multicast sockets or start listener threads -- by :user:`aiolibsbot`.
