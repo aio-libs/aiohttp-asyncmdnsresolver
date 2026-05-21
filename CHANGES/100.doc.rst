@@ -1,0 +1,1 @@
+Added a runnable ``examples/dual.py`` demonstrating ``AsyncDualMDNSResolver`` so the dual mDNS/DNS resolver has a copy-pasteable example alongside the existing single-resolver one -- by :user:`aiolibsbot`.
