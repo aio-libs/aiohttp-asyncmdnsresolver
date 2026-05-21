@@ -1,0 +1,4 @@
+Added tests asserting the ``family``, ``proto`` and ``flags`` fields of the
+``ResolveResult`` entries returned by the mDNS resolvers, locking in that each
+result's ``family`` follows the resolved address version rather than the query
+family -- by :user:`aiolibsbot`.
