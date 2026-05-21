@@ -85,9 +85,9 @@ class _AsyncMDNSResolverBase(AsyncResolver):
         self._mdns_timeout = mdns_timeout
         self._aiozc_owner = async_zeroconf is None
         # When this resolver owns its zeroconf instance, defer constructing it
-        # (which opens mDNS multicast sockets and starts listener threads) until
-        # the first ``.local`` lookup. Resolvers that only handle unicast names
-        # never pay that cost. A caller-supplied instance is used as-is.
+        # (which opens mDNS multicast sockets) until the first ``.local`` lookup.
+        # Resolvers that only handle unicast names never pay that cost. A
+        # caller-supplied instance is used as-is.
         self._aiozc: AsyncZeroconf | None = async_zeroconf
 
     def _ensure_aiozc(self) -> AsyncZeroconf:
