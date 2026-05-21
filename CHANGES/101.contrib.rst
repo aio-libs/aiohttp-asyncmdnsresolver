@@ -1,0 +1,3 @@
+Added regression tests pinning the ``mdns_timeout`` seconds-to-milliseconds
+conversion that ``AsyncMDNSResolver`` forwards to ``zeroconf``'s
+``async_request`` -- by :user:`aiolibsbot`.
