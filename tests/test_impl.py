@@ -83,6 +83,28 @@ async def dual_resolver() -> AsyncGenerator[AsyncDualMDNSResolver]:
 
 
 @pytest_asyncio.fixture
+async def dual_mdns_resolver() -> AsyncGenerator[Callable[..., AsyncDualMDNSResolver]]:
+    """Return a factory that builds AsyncDualMDNSResolver instances.
+
+    Mirrors ``mdns_resolver`` for the dual resolver: each instance is built
+    through the public constructor so tests can select ``mdns_timeout`` (or
+    other options) without poking private state, and every instance is closed
+    during teardown.
+    """
+    resolvers: list[AsyncDualMDNSResolver] = []
+
+    def _factory(**kwargs: Any) -> AsyncDualMDNSResolver:
+        kwargs.setdefault("mdns_timeout", 0.1)
+        resolver = AsyncDualMDNSResolver(**kwargs)
+        resolvers.append(resolver)
+        return resolver
+
+    yield _factory
+    for resolver in resolvers:
+        await resolver.close()
+
+
+@pytest_asyncio.fixture
 async def custom_resolver() -> AsyncGenerator[AsyncMDNSResolver]:
     """Return a resolver."""
     aiozc = AsyncZeroconf()
@@ -666,14 +688,14 @@ async def test_duplicate_ip_differing_hostname_async_dual_mdns_resolver(
 
 @pytest.mark.asyncio
 async def test_different_results_async_dual_mdns_resolver_zero_timeout(
-    dual_resolver: AsyncMDNSResolver,
+    dual_mdns_resolver: Callable[..., AsyncDualMDNSResolver],
 ) -> None:
     """Test AsyncDualMDNSResolver resolves using mDNS and DNS.
 
     Test when both resolvers return different results with zero timeout
     for mDNS.
     """
-    dual_resolver._mdns_timeout = 0
+    dual_resolver = dual_mdns_resolver(mdns_timeout=0)
     with (
         patch(
             "aiohttp_asyncmdnsresolver._impl.AsyncResolver.resolve",

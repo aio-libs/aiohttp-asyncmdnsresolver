@@ -1,0 +1,4 @@
+Added a ``dual_mdns_resolver`` factory test fixture mirroring
+``mdns_resolver`` so ``AsyncDualMDNSResolver`` tests can select
+``mdns_timeout`` through the public constructor instead of poking private
+state -- by :user:`aiolibsbot`.
