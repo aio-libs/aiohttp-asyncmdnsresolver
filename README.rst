@@ -91,6 +91,18 @@ when a ``.local`` name may be served by a unicast DNS server as well as mDNS.
    asyncio.run(main())
 
 
+Security note
+-------------
+
+mDNS resolution of ``.local`` names is not authenticated; any host on the same
+local link can answer for any ``.local`` name, so the resolved address should
+not be treated as a trust boundary. When connecting to sensitive ``.local``
+services, use HTTPS with certificate verification, and consider certificate
+pinning or mTLS. Passing ``mdns_timeout=0`` or ``mdns_timeout=None`` restricts
+mDNS resolution to the existing ``zeroconf`` cache and avoids sending new
+queries on the network, though cached entries may themselves originate from
+on-link responses.
+
 API documentation
 -----------------
 
